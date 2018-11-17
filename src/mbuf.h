@@ -6,6 +6,12 @@
 
 namespace rmq {
 
+/**
+ * Applications use MessageBuffer to store data to avoid low-level memory management 
+ * details in RDMA. The size of the buffer is fixed once declared. The buffer can 
+ * contains multiple chunks, but is not circular. Users take the responsibility to 
+ * ensure the data is stored in the expected position in the buffer.
+ */ 
 template <typename T>
 class MessageBuffer {
 private:
