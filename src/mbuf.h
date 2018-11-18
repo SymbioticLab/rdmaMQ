@@ -2,7 +2,7 @@
 #define MBUF_H_
 
 #include <infiniband/verbs.h>
-#include "config_rmq.h"
+#include "rmq.h"
 
 namespace rmq {
 
@@ -21,15 +21,15 @@ private:
     size_t block_size;      // size of a data block in bytes
     T *data;                // fixed sized array
 
-    // RDMA-related
-    struct ibv_pd *pd;
+    // RDMA transport metadata
+    Transport *transport;
     struct ibv_mr *mr;
     void *addr;
     
     /**
      * register memory region for RDMA
      */
-    init();
+    void init();
 
 public:
     MessageBuffer() {}
@@ -41,6 +41,7 @@ public:
       data(NULL) {
         init();
     }
+    // TODO: implement destructor
     ~MessageBuffer() {}
 
 };
