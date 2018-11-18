@@ -16,21 +16,31 @@ template <typename T>
 class MessageBuffer {
 private:
     // Basic info
-    size_t size;            // in bytes
-    size_t block_size;      // in bytes
-    size_t num_blocks;
-    T data;
+    size_t capacity;        // maximum number of data blocks
+    size_t num_blocks;      // current number of data blocks
+    size_t block_size;      // size of a data block in bytes
+    T *data;                // fixed sized array
 
     // RDMA-related
     struct ibv_pd *pd;
     struct ibv_mr *mr;
     void *addr;
     
-    //TODO: init() to call ibv_reg_mr
+    /**
+     * register memory region for RDMA
+     */
+    init();
 
 public:
     MessageBuffer() {}
     //TODO: custom costr
+    MessageBuffer(size_t capacity)
+    : capacity(capacity),
+      num_blocks(0),
+      block_size(sizeof(T)),
+      data(NULL) {
+        init();
+    }
     ~MessageBuffer() {}
 
 };
