@@ -18,7 +18,7 @@ void Transport::init() {
     // TODO: (low priority) query device to pick the correct MTU
     // TODO: (medium priority) create complete channel
     pd = ibv_alloc_pd(ctx);
-    assert_true(pd != nullptr, "Failed to allocate protection domain.");
+    assert_true(pd, "Failed to allocate protection domain.");
 }
 
 
