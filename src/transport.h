@@ -21,7 +21,7 @@ private:
     void init();
     
 public:
-    Transport() {}
+    Transport() { init(); }
     ~Transport() {}
     inline struct ibv_context ibv_get_ctx() { return ctx; }
     inline struct ibv_pd get_pd() { return pd; }
