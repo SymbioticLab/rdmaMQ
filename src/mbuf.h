@@ -3,6 +3,7 @@
 
 #include <infiniband/verbs.h>
 #include "rmq.h"
+#include "common.h"
 
 namespace rmq {
 
@@ -19,6 +20,7 @@ private:
     size_t capacity;        // maximum number of data blocks
     size_t num_blocks;      // current number of data blocks
     size_t block_size;      // size of a data block in bytes
+    size_t total_size;      // size of data capacity in bytes
     T *data;                // fixed sized array
 
     // RDMA transport metadata
@@ -38,7 +40,8 @@ public:
     : capacity(capacity),
       num_blocks(0),
       block_size(sizeof(T)),
-      data(NULL) {
+      total_size(capacity * sizeof(T))
+      data(nullptr) {
         init();
     }
     // TODO: implement destructor
