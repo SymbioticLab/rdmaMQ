@@ -10,5 +10,9 @@ void MessageBuffer::init() {
     assert_true(mr, "Failed to register MR.");
 }
 
+// explicit instantiations
+template class MessageBuffer<char>;
+template class MessageBuffer<int>;
+template class MessageBuffer<std::string>;
 
 }
