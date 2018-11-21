@@ -12,12 +12,27 @@
 
 namespace rmq {
 
+#define DEBUG_MODE 0
+
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
 
-inline void assert_true(bool condition, std::string error_msg) {
+//#define assert_debug(x) do { if (DEBUG_MODE) assert(x); } while (0)
+#ifdef DEBUG_MODE
+#define assert_debug(x) do { if (DEBUG_MODE) assert(x); } while (0)
+#else
+#define assert_debug(x)
+#endif
+
+#ifdef DEBUG_MODE
+#define LOG_DEBUG(x) do { fprintf(stderrm __VA_ARGS__) } while (0)
+#else
+#define LOG_DEBUG(x)
+#endif
+
+inline void assert_exit(bool condition, std::string error_msg) {
     if (unlikely(!condition)) {
-        fprintf(stderr, "%s. Exiting.\n", error_msg.c_str());
+        fprintf(stderr, "%s Exiting.\n", error_msg.c_str());
         fflush(stderr);
         exit(EXIT_FAILURE);
     }
