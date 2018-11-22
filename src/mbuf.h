@@ -2,7 +2,7 @@
 #define MBUF_H_
 
 #include <infiniband/verbs.h>
-#include "rmq.h"
+//#include "rmq.h"
 #include "common.h"
 
 namespace rmq {
@@ -35,7 +35,6 @@ private:
 
 public:
     MessageBuffer() {}
-    //TODO: custom costr
     MessageBuffer(size_t capacity)
     : capacity(capacity),
       num_blocks(0),
