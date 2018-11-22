@@ -12,7 +12,7 @@
 
 namespace rmq {
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
@@ -25,7 +25,7 @@ namespace rmq {
 #endif
 
 #ifdef DEBUG_MODE
-#define LOG_DEBUG(...) do { fprintf(stderr, __VA_ARGS__) } while (0)
+#define LOG_DEBUG(...) do { fprintf(stderr, __VA_ARGS__); } while (0)
 #else
 #define LOG_DEBUG(x)
 #endif
