@@ -1,14 +1,16 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+/**
+ * Common std_libs/functions/macros.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <memory>
 #include <string>
 #include <string.h>
-
-/**
- * Common functions/macros.
- */
+#include <vector>
 
 namespace rmq {
 

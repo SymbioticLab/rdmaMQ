@@ -2,6 +2,7 @@
 #define TRANSPORT_H_
 
 #include <infiniband/verbs.h>
+#include "common.h"
 //#include "rmq.h"
 
 namespace rmq {

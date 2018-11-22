@@ -1,4 +1,4 @@
-CC = g++ -std=c++11
+CC = g++ -std=c++14
 CPPFLAGS = -g -Wall
 LDLIBS = -lpthread -lrt -libverbs -lm
 OBJS = main.o mbuf.o transport.o
