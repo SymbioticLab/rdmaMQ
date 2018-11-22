@@ -24,7 +24,7 @@ private:
     T *data;                // fixed sized array
 
     // RDMA transport metadata
-    Transport *transport;
+    //Transport *transport;
     struct ibv_mr *mr;
     void *addr;
     
@@ -39,7 +39,7 @@ public:
     : capacity(capacity),
       num_blocks(0),
       block_size(sizeof(T)),
-      total_size(capacity * sizeof(T))
+      total_size(capacity * sizeof(T)),
       data(nullptr) {
         init();
     }

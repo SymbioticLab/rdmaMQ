@@ -23,8 +23,8 @@ private:
 public:
     Transport() { init(); }
     ~Transport() {}
-    inline struct ibv_context ibv_get_ctx() { return ctx; }
-    inline struct ibv_pd get_pd() { return pd; }
+    inline struct ibv_context *ibv_get_ctx() { return ctx; }
+    inline struct ibv_pd *get_pd() { return pd; }
     //inline struct ibv_mr get_mr() { return mr; }
     //inline void set_mr(struct ibv_mr *mr) { this->mr = mr; }
 };
