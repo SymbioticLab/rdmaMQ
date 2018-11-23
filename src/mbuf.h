@@ -38,7 +38,7 @@ private:
 
 public:
     MessageBuffer() {}
-    MessageBuffer(size_t capacity, Transport *transport)
+    MessageBuffer(size_t capacity, std::shared_ptr<Transport> transport)
     : capacity(capacity),
       num_blocks(0),
       block_size(sizeof(T)),
