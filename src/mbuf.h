@@ -25,10 +25,12 @@ private:
     size_t num_blocks;              // current number of data blocks
     size_t block_size;              // size of a data block in bytes
     size_t total_size;              // size of data capacity in bytes
-    std::unique_ptr<T[]> data;     // fixed sized array
+    std::unique_ptr<T[]> data;      // fixed sized array
 
     // RDMA transport metadata
     std::shared_ptr<Transport> transport;
+
+    // Memory region ptr
     struct ibv_mr *mr;
     
     /**
