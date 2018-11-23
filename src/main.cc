@@ -4,7 +4,8 @@
 #include "transport.h"
 
 int main() {
-	rmq::MessageBuffer<int> buffer(10);
+	auto transport = std::make_shared<rmq::Transport>();
+	rmq::MessageBuffer<int> buffer(10, transport);
 	std::cout << "hello world" << std::endl;
 
 	return 0;
