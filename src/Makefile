@@ -8,7 +8,7 @@ APPS = test
 all: $(APPS)
 
 test: $(OBJS)
-	$(CC) $(LDFLAGS) -o test $(OBJS)
+	$(CC) $(LDLIBS) -o test $(OBJS)
 
 main.o:
 	$(CC) $(CPPFLAGS) -c main.cc
