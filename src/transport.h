@@ -7,6 +7,9 @@
 
 namespace rmq {
 
+//template<typename T>
+//class MessageBuffer;
+
 /**
  * Handles RDMA context/connection setup before MessageBuffer 
  * registers memory region and Producer and Consumer transfer data.
@@ -14,13 +17,15 @@ namespace rmq {
  */
 
 class Transport {
+//template<typename T>
+//friend class MessageBuffer<T>;
 private:
     struct ibv_context *ctx;
     struct ibv_pd *pd;
 
     // Open ib device and alloc pd.
     void init();
-    
+
 public:
     Transport() { init(); }
     ~Transport() {}

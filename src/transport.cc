@@ -12,8 +12,8 @@ void Transport::init() {
         ctx = ibv_open_device(dev_list[i]);
         if (ctx) break;
     }
-    assert_exit(ctx != nullptr, "Failed to open ib device " + std::to_string(ibv_get_device_name(i)));
-    printf("Pick ib device %s\n", ibv_get_device_name(i));
+    assert_exit(ctx != nullptr, "Failed to open ib device " + std::string(ibv_get_device_name(dev_list[i])));
+    LOG_INFO("Pick ib device %s\n", ibv_get_device_name(dev_list[i]));
 
     // TODO: (low priority) query device to pick the correct MTU
     // TODO: (medium priority) create complete channel
