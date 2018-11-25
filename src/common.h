@@ -2,7 +2,7 @@
 #define COMMON_H_
 
 /**
- * Common std_libs/functions/macros.
+ * Common stl/functions/macros/configs.
  */
 
 #include <stdio.h>
@@ -11,6 +11,7 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include "config_rmq.h"
 
 namespace rmq {
 

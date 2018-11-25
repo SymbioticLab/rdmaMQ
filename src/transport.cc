@@ -4,7 +4,7 @@ namespace rmq {
 
 // combine open_dev and alloc_pd so that we don't need to store ctx in the class
 void Transport::open_device_and_alloc_pd() {
-    struct ibv_context ctx;
+    struct ibv_context *ctx;
     int num_devices = 0;
     struct ibv_device **dev_list = ibv_get_device_list(&num_devices);
     assert_exit(num_devices > 0, "Failed to find ib devices.");
@@ -26,12 +26,12 @@ void Transport::init() {
     open_device_and_alloc_pd();
 }
 
-void Transport::create_qp() {
-    channel = ibv_create_comp_channel(ctx)
-    cq = ibv_create_cq(ctx->context, MAX_CQE, NULL, NULL, 0);
+void Transport::create_cq() {
+    channel = ibv_create_comp_channel(pd->context);
+    cq = ibv_create_cq(pd->context, tr_max_cqe, NULL, NULL, 0);
     assert_exit(cq, "Failed to create CQ.");
-    
 }
+
 
 
 

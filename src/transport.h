@@ -18,7 +18,7 @@ namespace rmq {
  * init() is called in the constructor; other calls are done after
  * mbuf is created.
  * 
- * create_cq() uses unified comp_channel for sq & rq for now.
+ * create_cq() creates unified comp_channel for sq & rq for now.
  */
 
 class Transport {
@@ -27,7 +27,7 @@ class Transport {
 private:
     struct ibv_pd *pd;          // contains ibv_context once created
     struct ibv_cq *cq;
-    struct ibv_comp_channel channel;    // for both sq & rq
+    struct ibv_comp_channel *channel;    // for both sq & rq
 
     void open_device_and_alloc_pd();
 
@@ -38,12 +38,12 @@ private:
     void create_cq();
 
     // create qp, and move state to RTS
-    void create_qp();
+    //void create_qp();
 
 public:
     Transport() { init(); }
     ~Transport() {}
-    inline struct ibv_context *ibv_get_ctx() { return ctx; }
+    inline struct ibv_context *ibv_get_ctx() { return pd->context; }
     inline struct ibv_pd *get_pd() { return pd; }
     //inline struct ibv_mr get_mr() { return mr; }
     //inline void set_mr(struct ibv_mr *mr) { this->mr = mr; }
