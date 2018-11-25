@@ -32,6 +32,21 @@ void Transport::create_cq() {
     assert_exit(cq, "Failed to create CQ.");
 }
 
+void Transport::create_qp() {
+    struct ibv_qp_init_attr init_attr;
+    memset(&init_attr, 0, sizeof(struct ibv_qp_init_attr));
+    init_attr.send_cq = cq;
+    init_attr.recv_cq = cq;
+    init_attr.cap.max_send_wr  = tr_max_send_wr;
+    init_attr.cap.max_recv_wr  = tr_max_recv_wr;
+    init_attr.cap.max_send_sge = tr_max_send_sge;
+    init_attr.cap.max_recv_sge = tr_max_recv_sge;
+    init_attr.cap.max_inline_data = tr_max_inline_data;
+    init_attr.qp_type = IBV_QPT_RC;
+    init_attr.qp_context = (void *)1;       // could be used later for Justitia
+    qp = ibv_create_qp(pd, &init_attr);
+    assert_exit(qp, "Failed to create QP.");
+}
 
 
 

@@ -11,6 +11,11 @@ namespace rmq {
 
     /* RDMA transport config */
     constexpr int tr_max_cqe = 10000;
+    constexpr uint32_t tr_max_send_wr = 8000;
+    constexpr uint32_t tr_max_recv_wr = 8000;
+    constexpr uint32_t tr_max_send_sge = 1;
+    constexpr uint32_t tr_max_recv_sge = 1;
+    constexpr uint32_t tr_max_inline_data = 100;
 
 
 
