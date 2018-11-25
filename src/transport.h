@@ -14,20 +14,30 @@ namespace rmq {
  * Handles RDMA context/connection setup before MessageBuffer 
  * registers memory region and Producer and Consumer transfer data.
  * Currently, the class is instantiated with the default constr.
+ * 
+ * init() is called in the constructor; other calls are done after
+ * mbuf is created.
+ * 
+ * create_cq() uses unified comp_channel for sq & rq for now.
  */
 
 class Transport {
 //template<typename T>
 //friend class MessageBuffer<T>;
 private:
-    struct ibv_context *ctx;
-    struct ibv_pd *pd;
+    struct ibv_pd *pd;          // contains ibv_context once created
     struct ibv_cq *cq;
+    struct ibv_comp_channel channel;    // for both sq & rq
 
-    void open_device();
-    void alloc_pd();
-    void init();        // wrapper of open_device() and alloc_pd()
+    void open_device_and_alloc_pd();
+
+    // calls open_device_and_alloc_pd()
+    void init();
+
+    // create comp channel and cq
     void create_cq();
+
+    // create qp, and move state to RTS
     void create_qp();
 
 public:
