@@ -22,9 +22,13 @@ class Transport {
 private:
     struct ibv_context *ctx;
     struct ibv_pd *pd;
+    struct ibv_cq *cq;
 
-    // Open ib device and alloc pd.
-    void init();
+    void open_device();
+    void alloc_pd();
+    void init();        // wrapper of open_device() and alloc_pd()
+    void create_cq();
+    void create_qp();
 
 public:
     Transport() { init(); }
