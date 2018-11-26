@@ -172,7 +172,7 @@ void Transport::modify_qp_to_RTS(uint32_t psn) {
 void Transport::hand_shake_client(const char * server_addr) {
     struct addrinfo *res, *t, hints;
     char *service;
-    char msg[sizeof "0000:000000:000000:000000:00000000:0000000000000000:00000000000000000000000000000000"];
+    char msg[sizeof "0000:000000:000000:00000000:0000000000000000:00000000000000000000000000000000"];
     int sockfd = -1;
     struct dest_info *rem_dest = NULL;
     char gid[33];
@@ -219,6 +219,7 @@ void Transport::hand_shake_client(const char * server_addr) {
 }
 
 void Transport::hand_shake_server() {
+
 
 }
 
