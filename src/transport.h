@@ -56,10 +56,9 @@ private:
     // gets called after create_qp();
     void modify_qp_to_INIT();
 
-    // gets called after info exchanged with the remote node
+    // gets called after exchaning info with the remote node
     void modify_qp_to_RTR(uint8_t sl = 0);
-    void modify_qp_to_RTS();
-
+    void modify_qp_to_RTS(uint32_t psn = 23333);
 
 public:
     Transport() { init(); }

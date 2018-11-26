@@ -116,8 +116,28 @@ void Transport::modify_qp_to_RTR(uint8_t sl) {
     LOG_DEBUG("Modify QP to RTR state.\n");
 }
 
-void Transport::modify_qp_to_RTS() {
+void Transport::modify_qp_to_RTS(uint32_t psn) {
+    struct ibv_qp_attr attr;	
+    struct ibv_qp_init_attr init_attr;
+    assert_exit(ibv_query_qp(qp, &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
+    assert_exit(attr.qp_state == IBV_QPS_RTR, "Error: QP state not RTR when calling modify_qp_to_RTS().");
 
+    memset(&attr, 0, sizeof(struct ibv_qp_attr));
+    attr.qp_state	    = IBV_QPS_RTS;
+    attr.sq_psn	        = psn;
+    attr.timeout	    = 14;
+    attr.retry_cnt	    = 7;
+    attr.rnr_retry	    = 7;    //infinite
+    attr.max_rd_atomic  = 1;
+
+    assert_exit(ibv_modify_qp(qp, &attr,
+        IBV_QP_STATE              |
+        IBV_QP_TIMEOUT            |
+        IBV_QP_RETRY_CNT          |
+        IBV_QP_RNR_RETRY          |
+        IBV_QP_SQ_PSN             |
+        IBV_QP_MAX_QP_RD_ATOMIC) == 0, "Failed to modify QP to RTS");
+    LOG_DEBUG("Modify QP to RTS state.\n");
 }
 
 
