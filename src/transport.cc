@@ -1,4 +1,10 @@
 #include "transport.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <errno.h>
 
 namespace rmq {
 
@@ -14,6 +20,29 @@ enum ibv_mtu get_ibv_mtu(int mtu) {
         default:   assert_exit(false, "Invalid MTU value");
 	}
     return ib_mtu;
+}
+
+// helper functions to convert gid byte order
+void wire_gid_to_gid(const char *wgid, union ibv_gid *gid) {
+    char tmp[9];
+    uint32_t v32;
+    uint32_t *raw = (uint32_t *)gid->raw;
+    int i;
+
+    for (tmp[8] = 0, i = 0; i < 4; ++i) {
+        memcpy(tmp, wgid + i * 8, 8);
+        sscanf(tmp, "%x", &v32);
+        raw[i] = ntohl(v32);
+    }
+}
+
+void gid_to_wire_gid(const union ibv_gid *gid, char wgid[]) {
+    int i;
+    uint32_t *raw = (uint32_t *)gid->raw;
+
+    for (i = 0; i < 4; ++i) {
+        sprintf(&wgid[i * 8], "%08x", htonl(raw[i]));
+    }
 }
 
 // combine open_dev and alloc_pd so that we don't need to store ctx in the class
@@ -95,12 +124,12 @@ void Transport::modify_qp_to_RTR(uint8_t sl) {
     memset(&attr, 0, sizeof(attr));
     attr.qp_state               = IBV_QPS_RTR;
     attr.path_mtu               = get_ibv_mtu(tr_path_mtu);
-    attr.dest_qp_num            = dest.qpn;
-    attr.rq_psn                 = dest.psn;
+    attr.dest_qp_num            = rem_dest.qpn;
+    attr.rq_psn                 = rem_dest.psn;
     attr.max_dest_rd_atomic     = 1;
     attr.min_rnr_timer          = 12;
     attr.ah_attr.is_global      = 0;
-    attr.ah_attr.dlid           = dest.lid;
+    attr.ah_attr.dlid           = rem_dest.lid;
     attr.ah_attr.sl             = sl;
     attr.ah_attr.src_path_bits  = 0;
     attr.ah_attr.port_num       = tr_phy_port_num;
@@ -138,6 +167,63 @@ void Transport::modify_qp_to_RTS(uint32_t psn) {
         IBV_QP_SQ_PSN             |
         IBV_QP_MAX_QP_RD_ATOMIC) == 0, "Failed to modify QP to RTS");
     LOG_DEBUG("Modify QP to RTS state.\n");
+}
+
+void Transport::hand_shake_client(const char * server_addr) {
+    struct addrinfo *res, *t, hints;
+    char *service;
+    char msg[sizeof "0000:000000:000000:000000:00000000:0000000000000000:00000000000000000000000000000000"];
+    int sockfd = -1;
+    struct dest_info *rem_dest = NULL;
+    char gid[33];
+
+    LOG_DEBUG("Client tries to exchange info with server.\n");
+    assert_exit(asprintf(&service, "%d", tr_tcp_port) > 0, "Invalid server port number.");
+
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    assert_exit(getaddrinfo(server_addr, service, &hints, &res) == 0, "Error getting address info of server.");
+
+    for (t = res; t; t = t->ai_next) {
+        sockfd = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
+        if (sockfd >= 0) {
+            if (!connect(sockfd, t->ai_addr, t->ai_addrlen))
+                break;
+            close(sockfd);
+            sockfd = -1;
+        }
+    }
+
+    freeaddrinfo(res);
+    free(service);
+
+    assert_exit(sockfd == 0, "Error connect to server via socket.");
+
+    gid_to_wire_gid(&my_dest.gid, gid);
+    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
+                my_dest.psn, my_dest.rkey, my_dest.vaddr, gid);
+
+    assert_exit(write(sockfd, msg, sizeof(msg)) != sizeof(msg), "Error sending local node info.");
+
+    assert_exit(recv(sockfd, msg, sizeof(msg), MSG_WAITALL) != sizeof(msg), "Error recving remote node info: " + std::string(strerror(errno)) + ".");
+
+    assert_exit(write(sockfd, "done", sizeof("done")) != sizeof("done"), "Error sending done message");
+
+    rem_dest = static_cast<struct dest_info*>(malloc(sizeof *rem_dest));
+    assert_exit(rem_dest, "Error allocating space for rem_dest.");
+
+    sscanf(msg, "%hu:%x:%x:%x:%lx:%s", &rem_dest->lid, &rem_dest->qpn,
+                &rem_dest->psn, &rem_dest->rkey, &rem_dest->vaddr, gid);
+    wire_gid_to_gid(gid, &rem_dest->gid);
+    LOG_DEBUG("Client hand shake done\n");
+}
+
+void Transport::hand_shake_server() {
+
+}
+
+void Transport::qp_hand_shake() {
+
 }
 
 

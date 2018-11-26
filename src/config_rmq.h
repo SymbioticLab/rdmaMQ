@@ -17,6 +17,7 @@ namespace rmq {
     constexpr uint32_t tr_max_inline_data = 100;
     constexpr uint8_t tr_phy_port_num = 1;
     constexpr int tr_path_mtu = 2048;
+    constexpr int tr_tcp_port = 18515;
 
 
 

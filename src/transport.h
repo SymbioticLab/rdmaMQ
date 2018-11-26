@@ -40,12 +40,15 @@ private:
     struct ibv_cq *cq;                  // for both sq & rq
     struct ibv_comp_channel *channel;   // for both sq & rq
     struct ibv_qp *qp;
-    struct dest_info dest;              // remote node info (for RDMA)
+    struct dest_info rem_dest;       // remote node info
+    // TODO: and init my_dest
+    struct dest_info my_dest;           // local node info
 
     void open_device_and_alloc_pd();
 
     // calls open_device_and_alloc_pd()
     void init();
+    // TODO: decide what to put in init() later
 
     // create comp channel and cq
     void create_cq();
@@ -59,6 +62,11 @@ private:
     // gets called after exchaning info with the remote node
     void modify_qp_to_RTR(uint8_t sl = 0);
     void modify_qp_to_RTS(uint32_t psn = 23333);
+
+    // exchange node info for RDMA (routing, raddr, etc.)
+    void hand_shake_client(const char * server_addr);
+    void hand_shake_server();
+    void qp_hand_shake();
 
 public:
     Transport() { init(); }

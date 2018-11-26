@@ -15,16 +15,6 @@ namespace rmq {
  * of multiple with different types.
  */
 
-struct pingpong_dest {
-    int lid;
-	int qpn;
-	int qpn_read;
-	int psn;
-	unsigned rkey;
-	unsigned long long vaddr;
-	union ibv_gid gid;
-}; 
-
 template <typename T>
 class Producer {
 private:
