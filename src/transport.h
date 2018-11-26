@@ -57,7 +57,7 @@ private:
     void modify_qp_to_INIT();
 
     // gets called after info exchanged with the remote node
-    void modify_qp_to_RTR(uint8_t sl);
+    void modify_qp_to_RTR(uint8_t sl = 0);
     void modify_qp_to_RTS();
 
 
