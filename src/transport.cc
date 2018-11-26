@@ -64,9 +64,11 @@ void Transport::modify_qp_to_INIT() {
             IBV_QP_PKEY_INDEX       |
             IBV_QP_PORT             |
             IBV_QP_ACCESS_FLAGS) == 0, "Failed to modify QP to INIT.");
+    LOG_DEBUG("Modify QP to INIT state.\n");
 }
 
 void Transport::modify_qp_to_RTR() {
+
 
 }
 

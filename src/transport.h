@@ -10,6 +10,17 @@ namespace rmq {
 //template<typename T>
 //class MessageBuffer;
 
+
+// a small struct which holds the remote node info to establish RDMA conn
+struct dest_info {
+    uint16_t lid;
+    uint32_t qpn;
+    uint32_t psn;
+    uint32_t rkey;
+    uint64_t vaddr;
+    union ibv_gid gid;
+};
+
 /**
  * Handles RDMA context/connection setup before MessageBuffer 
  * registers memory region and Producer and Consumer transfer data.
