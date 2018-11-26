@@ -41,7 +41,13 @@ private:
     // create RC qp
     void create_qp();
 
-    
+    // gets called after create_qp();
+    void modify_qp_to_INIT();
+
+    // gets called after info exchanged with the remote node
+    void modify_qp_to_RTR();
+    void modify_qp_to_RTS();
+
 
 public:
     Transport() { init(); }

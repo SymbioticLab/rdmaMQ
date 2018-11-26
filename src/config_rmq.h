@@ -16,6 +16,7 @@ namespace rmq {
     constexpr uint32_t tr_max_send_sge = 1;
     constexpr uint32_t tr_max_recv_sge = 1;
     constexpr uint32_t tr_max_inline_data = 100;
+    constexpr uint8_t tr_phy_port_num = 1;
 
 
 

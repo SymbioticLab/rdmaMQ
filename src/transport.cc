@@ -48,6 +48,31 @@ void Transport::create_qp() {
     assert_exit(qp, "Failed to create QP.");
 }
 
+void Transport::modify_qp_to_INIT() {
+    struct ibv_qp_attr attr;
+    struct ibv_qp_init_attr init_attr;
+    assert_exit(ibv_query_qp(qp, &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
+    assert_exit(attr.qp_state == IBV_QPS_RESET, "Error: QP state not RESET when calling modify_qp_to_INIT().");
+    memset(&attr, 0, sizeof(struct ibv_qp_attr));
+    attr.qp_state = IBV_QPS_INIT;
+    attr.pkey_index = 0;
+    attr.port_num = tr_phy_port_num;
+    attr.qp_access_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE |
+                            IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_ATOMIC;
+    assert_exit(ibv_modify_qp(qp, &attr,
+            IBV_QP_STATE            |
+            IBV_QP_PKEY_INDEX       |
+            IBV_QP_PORT             |
+            IBV_QP_ACCESS_FLAGS) == 0, "Failed to modify QP to INIT.");
+}
+
+void Transport::modify_qp_to_RTR() {
+
+}
+
+void Transport::modify_qp_to_RTS() {
+
+}
 
 
 }
