@@ -36,10 +36,11 @@ class Transport {
 //template<typename T>
 //friend class MessageBuffer<T>;
 private:
-    struct ibv_pd *pd;          // contains ibv_context once created
+    struct ibv_pd *pd;                  // contains ibv_context once created
     struct ibv_cq *cq;                  // for both sq & rq
     struct ibv_comp_channel *channel;   // for both sq & rq
     struct ibv_qp *qp;
+    struct dest_info dest;              // remote node info (for RDMA)
 
     void open_device_and_alloc_pd();
 
@@ -56,7 +57,7 @@ private:
     void modify_qp_to_INIT();
 
     // gets called after info exchanged with the remote node
-    void modify_qp_to_RTR();
+    void modify_qp_to_RTR(uint8_t sl);
     void modify_qp_to_RTS();
 
 
