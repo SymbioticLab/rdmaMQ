@@ -18,7 +18,7 @@ struct dest_info {
     uint32_t psn;
     uint32_t rkey;
     uint64_t vaddr;
-    union ibv_gid gid;
+    union ibv_gid gid;  // only relevant for rem_dest
 };
 
 /**
@@ -49,6 +49,7 @@ private:
     // calls open_device_and_alloc_pd()
     void init();
     // TODO: decide what to put in init() later
+    // TODO: add RoCE support (gid_idx, ibv_query_gid(), etc.) later
 
     // create comp channel and cq
     void create_cq();
@@ -60,7 +61,7 @@ private:
     void modify_qp_to_INIT();
 
     // gets called after exchaning info with the remote node
-    void modify_qp_to_RTR(uint8_t sl = 0);
+    void modify_qp_to_RTR(uint8_t sl = 0, int gid_idx = -1);
     void modify_qp_to_RTS(uint32_t psn = 23333);
 
     // exchange node info for RDMA (routing, raddr, etc.)

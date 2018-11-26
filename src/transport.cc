@@ -115,7 +115,7 @@ void Transport::modify_qp_to_INIT() {
     LOG_DEBUG("Modify QP to INIT state.\n");
 }
 
-void Transport::modify_qp_to_RTR(uint8_t sl) {
+void Transport::modify_qp_to_RTR(uint8_t sl, int gid_idx) {
     struct ibv_qp_attr attr;
     struct ibv_qp_init_attr init_attr;
     assert_exit(ibv_query_qp(qp, &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
@@ -133,6 +133,14 @@ void Transport::modify_qp_to_RTR(uint8_t sl) {
     attr.ah_attr.sl             = sl;
     attr.ah_attr.src_path_bits  = 0;
     attr.ah_attr.port_num       = tr_phy_port_num;
+
+    // check for RoCE
+    if (rem_dest.gid.global.interface_id) {
+		attr.ah_attr.is_global = 1;
+		attr.ah_attr.grh.hop_limit = 1;
+		attr.ah_attr.grh.dgid = rem_dest.gid;
+		attr.ah_attr.grh.sgid_index = gid_idx;
+	}
 
     assert_exit(ibv_modify_qp(qp, &attr,
         IBV_QP_STATE              |
@@ -174,10 +182,8 @@ void Transport::hand_shake_client(const char * server_addr) {
     char *service;
     char msg[sizeof "0000:000000:000000:00000000:0000000000000000:00000000000000000000000000000000"];
     int sockfd = -1;
-    struct dest_info *rem_dest = NULL;
     char gid[33];
 
-    LOG_DEBUG("Client tries to exchange info with server.\n");
     assert_exit(asprintf(&service, "%d", tr_tcp_port) > 0, "Invalid server port number.");
 
     hints.ai_family = AF_UNSPEC;
@@ -196,31 +202,71 @@ void Transport::hand_shake_client(const char * server_addr) {
 
     freeaddrinfo(res);
     free(service);
-
-    assert_exit(sockfd == 0, "Error connect to server via socket.");
+    assert_exit(sockfd == 0, "Error connecting to server via socket.");
 
     gid_to_wire_gid(&my_dest.gid, gid);
     sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
                 my_dest.psn, my_dest.rkey, my_dest.vaddr, gid);
 
-    assert_exit(write(sockfd, msg, sizeof(msg)) != sizeof(msg), "Error sending local node info.");
+    assert_exit(write(sockfd, msg, sizeof(msg)) == sizeof(msg), "Error sending local node info.");
 
-    assert_exit(recv(sockfd, msg, sizeof(msg), MSG_WAITALL) != sizeof(msg), "Error recving remote node info: " + std::string(strerror(errno)) + ".");
+    assert_exit(recv(sockfd, msg, sizeof(msg), MSG_WAITALL) == sizeof(msg), "Error recving remote node info: " + std::string(strerror(errno)) + ".");
 
-    assert_exit(write(sockfd, "done", sizeof("done")) != sizeof("done"), "Error sending done message");
+    assert_exit(write(sockfd, "done", sizeof("done")) == sizeof("done"), "Error sending done message");
 
-    rem_dest = static_cast<struct dest_info*>(malloc(sizeof *rem_dest));
-    assert_exit(rem_dest, "Error allocating space for rem_dest.");
-
-    sscanf(msg, "%hu:%x:%x:%x:%lx:%s", &rem_dest->lid, &rem_dest->qpn,
-                &rem_dest->psn, &rem_dest->rkey, &rem_dest->vaddr, gid);
-    wire_gid_to_gid(gid, &rem_dest->gid);
-    LOG_DEBUG("Client hand shake done\n");
+    sscanf(msg, "%hu:%x:%x:%x:%lx:%s", &rem_dest.lid, &rem_dest.qpn,
+                &rem_dest.psn, &rem_dest.rkey, &rem_dest.vaddr, gid);
+    wire_gid_to_gid(gid, &rem_dest.gid);
+    LOG_DEBUG("Client hand shake done.\n");
 }
 
 void Transport::hand_shake_server() {
+    struct addrinfo *res, *t, hints;
+    char *service;
+    char msg[sizeof "0000:000000:000000:00000000:0000000000000000:00000000000000000000000000000000"];
+    int sockfd = -1, connfd, optval = 1;
+    char gid[33];
 
+    assert_exit(asprintf(&service, "%d", tr_tcp_port) > 0, "Invalid server port number.");
 
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    assert_exit(getaddrinfo(nullptr, service, &hints, &res) == 0, "Error getting address info of server.");
+
+    for (t = res; t; t = t->ai_next) {
+        sockfd = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
+        if (sockfd >= 0) {
+            setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+            if (!bind(sockfd, t->ai_addr, t->ai_addrlen))
+                break;
+            close(sockfd);
+            sockfd = -1;
+        }
+    }
+
+    freeaddrinfo(res);
+    free(service);
+    assert_exit(sockfd == 0, "Error binding via socket.");
+
+    listen(sockfd, 1);
+    connfd = accept(sockfd, NULL, 0);
+    close(sockfd);
+    assert_exit(connfd >= 0, "Error accepting conn from client via socket.");
+    
+    assert_exit(recv(connfd, msg, sizeof(msg), MSG_WAITALL) == sizeof(msg), "Error recving remote node info: " + std::string(strerror(errno)) + ".");
+
+    sscanf(msg, "%hu:%x:%x:%x:%lx:%s", &rem_dest.lid, &rem_dest.qpn,
+                &rem_dest.psn, &rem_dest.rkey, &rem_dest.vaddr, gid);
+    wire_gid_to_gid(gid, &rem_dest.gid);
+
+    gid_to_wire_gid(&my_dest.gid, gid);
+    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
+                my_dest.psn, my_dest.rkey, my_dest.vaddr, gid);
+    assert_exit(write(connfd, msg, sizeof(msg)) == sizeof(msg), "Error sending local node info.");
+
+    assert_exit(recv(connfd, msg, sizeof("done"), MSG_WAITALL) == sizeof("done"), "Error recving done message");
+    LOG_DEBUG("Server hand shake done.\n");
 }
 
 void Transport::qp_hand_shake() {
