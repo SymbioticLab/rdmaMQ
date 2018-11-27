@@ -3,7 +3,7 @@
 
 #include <infiniband/verbs.h>
 //#include "rmq.h"
-#include "transport.h"
+//#include "transport.h"
 #include "common.h"
 
 namespace rmq {
@@ -25,10 +25,11 @@ private:
     size_t num_blocks;              // current number of data blocks
     size_t block_size;              // size of a data block in bytes
     size_t total_size;              // size of data capacity in bytes
-    std::unique_ptr<T[]> data;      // fixed sized array
+    //std::unique_ptr<T[]> data;      // fixed sized array
+    T* data;                        // fixed sized array
 
     // RDMA transport metadata
-    std::shared_ptr<Transport> transport;
+    //std::shared_ptr<Transport> transport;
 
     // Memory region ptr
     struct ibv_mr *mr;
@@ -36,21 +37,22 @@ private:
     /**
      * register a memory region for RDMA
      */
-    void init();
+    void init(struct ibv_pd *pd);
 
 public:
     MessageBuffer() {}
-    MessageBuffer(size_t capacity, std::shared_ptr<Transport> transport)
+    MessageBuffer(size_t capacity, struct ibv_pd *pd)
     : capacity(capacity),
       num_blocks(0),
       block_size(sizeof(T)),
       total_size(capacity * sizeof(T)),
-      data(nullptr),
-      transport(transport) {
-        init();
+      data(nullptr) {
+        init(pd);
     }
-    // TODO: implement destructor
-    ~MessageBuffer() {}
+    ~MessageBuffer() {
+        delete[] data;
+    }
+
 
 };
 
