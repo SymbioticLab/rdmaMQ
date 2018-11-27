@@ -94,6 +94,11 @@ void Transport::create_qp() {
     assert_exit(qp, "Failed to create QP.");
 }
 
+void Transport::create_cq_and_qp() {
+    create_cq();
+    create_qp();
+}
+
 void Transport::modify_qp_to_INIT() {
     struct ibv_qp_attr attr;
     struct ibv_qp_init_attr init_attr;
@@ -175,6 +180,18 @@ void Transport::modify_qp_to_RTS(uint32_t psn) {
         IBV_QP_SQ_PSN             |
         IBV_QP_MAX_QP_RD_ATOMIC) == 0, "Failed to modify QP to RTS");
     LOG_DEBUG("Modify QP to RTS state.\n");
+}
+
+void Transport::modify_qp_state(enum ibv_qp_state target_state) {
+    if (target_state == IBV_QPS_INIT) {
+        modify_qp_to_INIT();
+    } else if (target_state == IBV_QPS_RTR) {
+        modify_qp_to_RTR();
+    } else if (target_state ==IBV_QPS_RTS) {
+        modify_qp_to_RTS();
+    } else {
+        assert_exit(false, "Error: Unsupported QP state.");
+    }
 }
 
 void Transport::hand_shake_client(const char * server_addr) {
@@ -269,8 +286,12 @@ void Transport::hand_shake_server() {
     LOG_DEBUG("Server hand shake done.\n");
 }
 
-void Transport::qp_hand_shake() {
-
+void Transport::qp_hand_shake(const char *server_addr) {
+    if (server_addr) {      // client
+        hand_shake_client(server_addr);
+    } else {            // server
+        hand_shake_server();
+    }
 }
 
 

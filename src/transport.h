@@ -45,9 +45,6 @@ private:
     struct dest_info my_dest;           // local node info
 
     void open_device_and_alloc_pd();
-
-    // calls open_device_and_alloc_pd()
-    void init();
     // TODO: decide what to put in init() later
     // TODO: add RoCE support (gid_idx, ibv_query_gid(), etc.) later
 
@@ -67,15 +64,25 @@ private:
     // exchange node info for RDMA (routing, raddr, etc.)
     void hand_shake_client(const char * server_addr);
     void hand_shake_server();
-    void qp_hand_shake();
 
 public:
-    Transport() { init(); }
+    Transport() {}
+    //Transport(int is_server): is_server(is_server) { init(); };
     ~Transport() {}
     inline struct ibv_context *ibv_get_ctx() { return pd->context; }
     inline struct ibv_pd *get_pd() { return pd; }
-    //inline struct ibv_mr get_mr() { return mr; }
-    //inline void set_mr(struct ibv_mr *mr) { this->mr = mr; }
+
+    // calls open_device_and_alloc_pd()
+    void init();
+
+    // calls hand_shake_client() hand_shake_server()
+    void qp_hand_shake(const char *server_addr);
+
+    // calls create_cq() and create_qp()
+    void create_cq_and_qp();
+
+    // modify qp states
+    void modify_qp_state(enum ibv_qp_state target_state);
 };
 
 
