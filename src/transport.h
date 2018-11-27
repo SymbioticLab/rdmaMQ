@@ -71,6 +71,8 @@ public:
     ~Transport() {}
     inline struct ibv_context *ibv_get_ctx() { return pd->context; }
     inline struct ibv_pd *get_pd() { return pd; }
+    inline struct ibv_qp *get_qp() { return qp; }
+    inline struct ibv_cq *get_cq() { return cq; }
 
     // calls open_device_and_alloc_pd()
     void init();
