@@ -6,7 +6,7 @@
  */
 
 namespace rmq {
-
+    /* Message Buffer config */
 
     /* RDMA transport config */
     constexpr int tr_max_cqe = 10000;

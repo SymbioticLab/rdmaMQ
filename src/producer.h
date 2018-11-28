@@ -22,7 +22,7 @@ namespace rmq {
 template <typename T>
 class Producer {
 private:
-    MessageBuffer<int> mbuf;        // assume type int for now
+    std::unique<MessageBuffer<int>> mbuf;        // assume type int for now
     std::unique_ptr<Transport> transport;
     std::string broker_ip;          // Do we really need this?
     
@@ -32,8 +32,9 @@ private:
 
 public:
     Producer() {}
-    Producer(char *broker_ip) : broker_ip(broker_ip) {
+    Producer(size_t mbuf_cap, char *broker_ip) : broker_ip(broker_ip) {
         transport = std::make_unique<Transport>();
+        mbuf = std::make_unique<MessageBuffer<int>> MessageBuffer(mbuf_cap, transport->get_pd());
     }
     ~Producer() {}
 
