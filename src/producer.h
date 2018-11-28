@@ -18,20 +18,17 @@ namespace rmq {
 template <typename T>
 class Producer {
 private:
-    // Basic of the basic
-    MessageBuffer<int> mbuf;        // type int for simplicity
-
-    // RDMA transport metadata
-    std::shared_ptr<Transport> transport;
-
-    // Broker info (brokerIP, raddr, etc)
-    std::string broker_ip;
-
+    MessageBuffer<int> mbuf;        // assume type int for now
+    std::unique_ptr<Transport> transport;
+    std::string broker_ip;          // Do we really need this?
+    
+    
     
 
 
 public:
-
+    Producer() {}
+    ~Producer() {}
 
 
 }
