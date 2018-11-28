@@ -59,7 +59,7 @@ private:
     void create_qp();
 
     // init my_dest
-    void init_my_dest(uint32_t rkey, uint64_t vaddr);
+    void init_my_dest(uint32_t rkey, uint64_t vaddr, int gid_idx);
 
     // gets called after create_qp();
     void modify_qp_to_INIT();

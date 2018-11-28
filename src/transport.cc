@@ -93,6 +93,7 @@ void Transport::create_qp() {
 }
 
 void Transport::init_my_dest(uint32_t rkey, uint64_t vaddr, int gid_idx) {
+    LOG_DEBUG("gid_idx is %d.\n", gid_idx);
     struct ibv_port_attr port_attr;
 	assert_exit(ibv_query_port(pd->context, tr_phy_port_num, &port_attr) == 0, "Failed to query ib port.");
 
