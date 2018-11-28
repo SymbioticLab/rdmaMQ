@@ -27,21 +27,21 @@ private:
     std::unique<MessageBuffer<int>> mbuf;        // assume type int for now
     std::unique_ptr<Transport> transport;
     std::string broker_ip;
-    
-    
-    
 
 
 public:
     Producer() {}
-    Producer(size_t mbuf_cap, char *broker_ip) : broker_ip(std::string(broker_ip)) {
+    Producer(size_t mbuf_cap, char *broker_ip)
+    : broker_ip(std::string(broker_ip)) {
         transport = std::make_unique<Transport>();
         mbuf = std::make_unique<MessageBuffer<int>> MessageBuffer(mbuf_cap, transport->get_pd());
     }
     ~Producer() {}
 
-    void init();
-
+    void init_transport(int gid_idx) {
+        transport.init(broker_ip.c_str(), mbuf->get_rkey(), 
+            std::static_cast<uintptr_t>(mbuf->get_data()), gid_idx);
+    }
 
 }
 

@@ -46,8 +46,6 @@ private:
     struct dest_info my_dest;           // local node info
 
     void open_device_and_alloc_pd();
-    // TODO: decide what to put in init() later
-    // TODO: add RoCE support (gid_idx, ibv_query_gid(), etc.) later
 
     // create comp channel and cq
     void create_cq();
@@ -79,6 +77,7 @@ public:
     inline struct ibv_cq *get_cq() { return cq; }
 
     // init transport (between sender & receiver) after MessageBuffer is constructed
+    // After init() returns, qp has transited to RTS.
     void init(const char *server_addr, uint32_t rkey, uint64_t vaddr, int gid_idx = -1);
 
 };

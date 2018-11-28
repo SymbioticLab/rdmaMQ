@@ -50,10 +50,13 @@ public:
         init(pd);
     }
     ~MessageBuffer() {
+        assert_exit(ibv_dereg_mr(mr) == 0, "Error deregister mr.");
         delete[] data;
     }
 
-    inline T* get_data() { return data; }
+    inline T *get_data() { return data; }
+    inline struct ibv_mr* get_mr() { return mr; }
+    inline uint32_t get_rkey() { return mr->rkey; }
 
 };
 
