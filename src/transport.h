@@ -18,7 +18,8 @@ struct dest_info {
     uint32_t psn;
     uint32_t rkey;
     uint64_t vaddr;
-    union ibv_gid gid;  // only relevant for rem_dest
+    int gid_idx;
+    union ibv_gid gid;
 };
 
 /**
@@ -57,12 +58,15 @@ private:
     // create RC qp
     void create_qp();
 
+    // init my_dest
+    void init_my_dest(uint32_t rkey, uint64_t vaddr);
+
     // gets called after create_qp();
     void modify_qp_to_INIT();
 
     // gets called after exchaning info with the remote node
-    void modify_qp_to_RTR(uint8_t sl = 0, int gid_idx = -1);
-    void modify_qp_to_RTS(uint32_t psn = 23333);
+    void modify_qp_to_RTR(uint8_t sl = 0);
+    void modify_qp_to_RTS();
 
     // exchange node info for RDMA (routing, raddr, etc.)
     void hand_shake_client(const char * server_addr);
@@ -77,11 +81,14 @@ public:
     inline struct ibv_qp *get_qp() { return qp; }
     inline struct ibv_cq *get_cq() { return cq; }
 
-    // calls hand_shake_client() hand_shake_server()
+    // calls hand_shake_client() or hand_shake_server()
     void qp_hand_shake(const char *server_addr);
 
-    // calls create_cq() and create_qp()
+    // calls create_cq(), create_qp(), and setup_local_info()
     void create_cq_and_qp();
+
+    // calls init_my_dest()
+    void setup_local_info(uint32_t rkey, uint64_t vaddr, int gid_idx = -1);
 
     // modify qp states
     void modify_qp_state(enum ibv_qp_state target_state);

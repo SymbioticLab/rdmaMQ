@@ -53,6 +53,7 @@ public:
         delete[] data;
     }
 
+    inline T* get_data() { return data; }
 
 };
 

@@ -1,5 +1,4 @@
 #include "transport.h"
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -60,7 +59,6 @@ void Transport::open_device_and_alloc_pd() {
     assert_exit(ctx != nullptr, "Failed to open ib device " + std::string(ibv_get_device_name(dev_list[i])));
     LOG_INFO("Pick ib device %s\n", ibv_get_device_name(dev_list[i]));
     // TODO: (low priority) query device to pick the correct MTU
-    // TODO: (medium priority) create complete channel
 
     pd = ibv_alloc_pd(ctx);     // at this ctx can be accessed thru pd;
     assert_exit(pd, "Failed to allocate protection domain.");
@@ -94,6 +92,25 @@ void Transport::create_qp() {
     assert_exit(qp, "Failed to create QP.");
 }
 
+void Transport::init_my_dest(uint32_t rkey, uint64_t vaddr, int gid_idx) {
+    struct ibv_port_attr port_attr;
+	assert_exit(ibv_query_port(pd->context, tr_phy_port_num, &port_attr) == 0, "Failed to query ib port.");
+
+    my_dest.lid = port_attr.lid;
+    my_dest.qpn = qp->qp_num;
+    my_dest.psn = lrand48() & 0xffffff;
+    my_dest.rkey = rkey;
+    my_dest.vaddr = vaddr;
+    my_dest.gid_idx = gid_idx;
+
+    if (gid_idx >= 0) {
+        assert_exit(ibv_query_gid(pd->context, tr_phy_port_num, gid_idx, &my_dest.gid) == 0, "Failed to query local gid.");
+    }
+}
+
+void Transport::setup_local_info(uint32_t rkey, uint64_t vaddr, int gid_idx) {
+    init_my_dest(rkey, vaddr, gid_idx);
+}
 void Transport::create_cq_and_qp() {
     create_cq();
     create_qp();
@@ -120,7 +137,7 @@ void Transport::modify_qp_to_INIT() {
     LOG_DEBUG("Modify QP to INIT state.\n");
 }
 
-void Transport::modify_qp_to_RTR(uint8_t sl, int gid_idx) {
+void Transport::modify_qp_to_RTR(uint8_t sl) {
     struct ibv_qp_attr attr;
     struct ibv_qp_init_attr init_attr;
     assert_exit(ibv_query_qp(qp, &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
@@ -144,7 +161,7 @@ void Transport::modify_qp_to_RTR(uint8_t sl, int gid_idx) {
 		attr.ah_attr.is_global = 1;
 		attr.ah_attr.grh.hop_limit = 1;
 		attr.ah_attr.grh.dgid = rem_dest.gid;
-		attr.ah_attr.grh.sgid_index = gid_idx;
+		attr.ah_attr.grh.sgid_index = my_dest.gid_idx;
 	}
 
     assert_exit(ibv_modify_qp(qp, &attr,
@@ -158,7 +175,7 @@ void Transport::modify_qp_to_RTR(uint8_t sl, int gid_idx) {
     LOG_DEBUG("Modify QP to RTR state.\n");
 }
 
-void Transport::modify_qp_to_RTS(uint32_t psn) {
+void Transport::modify_qp_to_RTS() {
     struct ibv_qp_attr attr;	
     struct ibv_qp_init_attr init_attr;
     assert_exit(ibv_query_qp(qp, &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
@@ -166,7 +183,7 @@ void Transport::modify_qp_to_RTS(uint32_t psn) {
 
     memset(&attr, 0, sizeof(struct ibv_qp_attr));
     attr.qp_state	    = IBV_QPS_RTS;
-    attr.sq_psn	        = psn;
+    attr.sq_psn	        = my_dest.psn;
     attr.timeout	    = 14;
     attr.retry_cnt	    = 7;
     attr.rnr_retry	    = 7;    //infinite

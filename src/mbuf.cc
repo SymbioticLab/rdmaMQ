@@ -1,5 +1,4 @@
 #include "mbuf.h"
-#include <unistd.h>
 
 namespace rmq {
 
