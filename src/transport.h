@@ -49,9 +49,6 @@ private:
     // TODO: decide what to put in init() later
     // TODO: add RoCE support (gid_idx, ibv_query_gid(), etc.) later
 
-    // calls open_device_and_alloc_pd()
-    void init();
-
     // create comp channel and cq
     void create_cq();
 
@@ -73,7 +70,7 @@ private:
     void hand_shake_server();
 
 public:
-    Transport() { init(); }
+    Transport() { open_device_and_alloc_pd(); }
     //Transport(int is_server): is_server(is_server) { init(); };
     ~Transport() {}
     inline struct ibv_context *ibv_get_ctx() { return pd->context; }
@@ -81,17 +78,9 @@ public:
     inline struct ibv_qp *get_qp() { return qp; }
     inline struct ibv_cq *get_cq() { return cq; }
 
-    // calls hand_shake_client() or hand_shake_server()
-    void qp_hand_shake(const char *server_addr);
+    // init transport (between sender & receiver) after MessageBuffer is constructed
+    void init(const char *server_addr, uint32_t rkey, uint64_t vaddr, int gid_idx = -1);
 
-    // calls create_cq(), create_qp(), and setup_local_info()
-    void create_cq_and_qp();
-
-    // calls init_my_dest()
-    void setup_local_info(uint32_t rkey, uint64_t vaddr, int gid_idx = -1);
-
-    // modify qp states
-    void modify_qp_state(enum ibv_qp_state target_state);
 };
 
 

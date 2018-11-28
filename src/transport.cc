@@ -64,10 +64,6 @@ void Transport::open_device_and_alloc_pd() {
     assert_exit(pd, "Failed to allocate protection domain.");
 }
 
-void Transport::init() {
-    open_device_and_alloc_pd();
-}
-
 void Transport::create_cq() {
     channel = ibv_create_comp_channel(pd->context);
     cq = ibv_create_cq(pd->context, tr_max_cqe, NULL, NULL, 0);
@@ -107,14 +103,6 @@ void Transport::init_my_dest(uint32_t rkey, uint64_t vaddr, int gid_idx) {
     if (gid_idx >= 0) {
         assert_exit(ibv_query_gid(pd->context, tr_phy_port_num, gid_idx, &my_dest.gid) == 0, "Failed to query local gid.");
     }
-}
-
-void Transport::setup_local_info(uint32_t rkey, uint64_t vaddr, int gid_idx) {
-    init_my_dest(rkey, vaddr, gid_idx);
-}
-void Transport::create_cq_and_qp() {
-    create_cq();
-    create_qp();
 }
 
 void Transport::modify_qp_to_INIT() {
@@ -198,18 +186,6 @@ void Transport::modify_qp_to_RTS() {
         IBV_QP_SQ_PSN             |
         IBV_QP_MAX_QP_RD_ATOMIC) == 0, "Failed to modify QP to RTS");
     LOG_DEBUG("Modify QP to RTS state.\n");
-}
-
-void Transport::modify_qp_state(enum ibv_qp_state target_state) {
-    if (target_state == IBV_QPS_INIT) {
-        modify_qp_to_INIT();
-    } else if (target_state == IBV_QPS_RTR) {
-        modify_qp_to_RTR();
-    } else if (target_state ==IBV_QPS_RTS) {
-        modify_qp_to_RTS();
-    } else {
-        assert_exit(false, "Error: Unsupported QP state.");
-    }
 }
 
 void Transport::hand_shake_client(const char * server_addr) {
@@ -304,13 +280,21 @@ void Transport::hand_shake_server() {
     LOG_DEBUG("Server hand shake done.\n");
 }
 
-void Transport::qp_hand_shake(const char *server_addr) {
+void Transport::init(const char *server_addr, uint32_t rkey, uint64_t vaddr, int gid_idx) {
+    init_my_dest(rkey, vaddr, gid_idx);
+    create_cq();
+    create_qp();
+    
+    modify_qp_to_INIT();
+
     if (server_addr) {      // client
         hand_shake_client(server_addr);
-    } else {            // server
+    } else {                // server
         hand_shake_server();
     }
-}
 
+    modify_qp_to_RTR();     // sl = 0
+    modify_qp_to_RTS();
+}
 
 }
