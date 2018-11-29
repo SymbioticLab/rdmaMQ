@@ -269,7 +269,8 @@ void Transport::hand_shake_server() {
     close(sockfd);
     assert_exit(connfd >= 0, "Error accepting conn from client via socket.");
     
-    assert_exit(recv(connfd, msg, sizeof(msg), MSG_WAITALL) == sizeof(msg), "Error recving remote node info: " + std::string(strerror(errno)) + ".");
+    assert_exit(recv(connfd, msg, sizeof(msg), MSG_WAITALL) == sizeof(msg),
+                "Error recving remote node info: " + std::string(strerror(errno)) + ".");
 
     sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &remote_info.lid, &remote_info.qpn,
                 &remote_info.psn, &remote_info.data_rkey, &remote_info.data_vaddr,
@@ -323,10 +324,21 @@ void Transport::post_ATOMIC_FA(uint64_t compare_add) {
     wr.send_flags = IBV_SEND_SIGNALED;
     wr.wr.atomic.remote_addr = remote_info.ctrl_vaddr;
     wr.wr.atomic.rkey        = remote_info.ctrl_rkey;
-    //wr.wr.atomic.compare_add = num_msg * sizeof(T);
     wr.wr.atomic.compare_add = compare_add;
 
     assert_exit(ibv_post_send(qp, &wr, &bad_wr) == 0, "Failed to post sr to fetch & add write addr.");
+}
+
+void Transport::poll_from_cq(size_t num_entries) {
+    // TODO: add event-triggered polling later
+    int ne = 0;
+    struct ibv_wc wc;
+    do {
+        ne = ibv_poll_cq(cq, num_entries, &wc);
+    } while (ne == 0);
+
+    assert_exit(wc.status == IBV_WC_SUCCESS, "polled wc status not SUCCESS: " + 
+                std::string(ibv_wc_status_str(wc.status)) + ".");
 }
 
 }

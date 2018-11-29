@@ -87,7 +87,7 @@ public:
     void init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx = -1);
 
     // poll wc from cq
-    void poll_from_cq();
+    void poll_from_cq(size_t num_entries);
     
     // post a send request using ATOMIC_FETCH_AND_ADD
     // Note: value read is put in ctrl_mr
