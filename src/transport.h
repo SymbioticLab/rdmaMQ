@@ -48,8 +48,6 @@ private:
     struct ibv_qp *qp;
     struct dest_info rem_dest;          // remote node info (*mr only has rkey & vaddr)
     struct dest_info my_dest;           // local node info
-    struct ibv_mr *data_mr;             // local data mr
-    struct ibv_mr *ctrl_mr;             // local ctrl mr (w/ atomic ops)
 
     void open_device_and_alloc_pd();
 
