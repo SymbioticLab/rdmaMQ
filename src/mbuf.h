@@ -56,7 +56,6 @@ public:
 
     inline T *get_data() { return data; }
     inline struct ibv_mr* get_mr() { return mr; }
-    inline uint32_t get_rkey() { return mr->rkey; }
 
 };
 

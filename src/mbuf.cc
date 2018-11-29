@@ -19,6 +19,7 @@ void MessageBuffer<T>::init(struct ibv_pd *pd) {
 // explicit instantiations
 template class MessageBuffer<char>;
 template class MessageBuffer<int>;
+template class MessageBuffer<uint64_t>;
 template class MessageBuffer<std::string>;
 
 }

@@ -88,7 +88,7 @@ void Transport::create_qp() {
     assert_exit(qp, "Failed to create QP.");
 }
 
-void Transport::init_my_dest(uint32_t rkey, uint64_t vaddr, int gid_idx) {
+void Transport::init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
     LOG_DEBUG("gid_idx is %d.\n", gid_idx);
     struct ibv_port_attr port_attr;
 	assert_exit(ibv_query_port(pd->context, tr_phy_port_num, &port_attr) == 0, "Failed to query ib port.");
@@ -96,8 +96,8 @@ void Transport::init_my_dest(uint32_t rkey, uint64_t vaddr, int gid_idx) {
     my_dest.lid = port_attr.lid;
     my_dest.qpn = qp->qp_num;
     my_dest.psn = lrand48() & 0xffffff;
-    my_dest.rkey = rkey;
-    my_dest.vaddr = vaddr;
+    my_dest.data_mr = data_mr;      // mrs better live long
+    my_dest.ctrl_mr = ctrl_mr;
     my_dest.gid_idx = gid_idx;
 
     if (gid_idx >= 0) {
@@ -280,8 +280,8 @@ void Transport::hand_shake_server() {
     LOG_DEBUG("Server hand shake done.\n");
 }
 
-void Transport::init(const char *server_addr, uint32_t rkey, uint64_t vaddr, int gid_idx) {
-    init_my_dest(rkey, vaddr, gid_idx);
+void Transport::init(const char *server_addr, struct ibv_struct *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
+    init_my_dest(data_mr, ctrl_mr, gid_idx);
     create_cq();
     create_qp();
     

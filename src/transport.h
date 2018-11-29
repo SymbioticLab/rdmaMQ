@@ -10,15 +10,15 @@ namespace rmq {
 //template<typename T>
 //class MessageBuffer;
 
-
 // a small struct which holds the remote node info to establish RDMA conn
+// assume a data mr and a control mr for now
 struct dest_info {
     uint16_t lid;
     uint32_t qpn;
     uint32_t psn;
-    uint32_t rkey;
-    uint64_t vaddr;
     int gid_idx;
+    struct ibv_mr *data_mr;
+    struct ibv_mr *ctrl_mr;
     union ibv_gid gid;
 };
 
@@ -31,6 +31,9 @@ struct dest_info {
  * mbuf is created.
  * 
  * create_cq() creates unified comp_channel & cq for sq & rq for now.
+ * 
+ * Each tranport object is associated with 2 mrs, one data and the
+ * other for control.
  */
 
 class Transport {
@@ -42,7 +45,6 @@ private:
     struct ibv_comp_channel *channel;   // for both sq & rq
     struct ibv_qp *qp;
     struct dest_info rem_dest;       // remote node info
-    // TODO: and init my_dest
     struct dest_info my_dest;           // local node info
 
     void open_device_and_alloc_pd();
@@ -54,7 +56,7 @@ private:
     void create_qp();
 
     // init my_dest
-    void init_my_dest(uint32_t rkey, uint64_t vaddr, int gid_idx);
+    void init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx);
 
     // gets called after create_qp();
     void modify_qp_to_INIT();
@@ -78,7 +80,7 @@ public:
 
     // init transport (between sender & receiver) after MessageBuffer is constructed
     // After init() returns, qp has transited to RTS.
-    void init(const char *server_addr, uint32_t rkey, uint64_t vaddr, int gid_idx = -1);
+    void init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx = -1);
 
 };
 
