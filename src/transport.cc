@@ -88,7 +88,7 @@ void Transport::create_qp() {
     assert_exit(qp, "Failed to create QP.");
 }
 
-void Transport::init_local_info(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
+void Transport::init_local_info(int gid_idx) {
     LOG_DEBUG("gid_idx is %d.\n", gid_idx);
     struct ibv_port_attr port_attr;
 	assert_exit(ibv_query_port(pd->context, tr_phy_port_num, &port_attr) == 0, "Failed to query ib port.");
@@ -287,7 +287,9 @@ void Transport::hand_shake_server() {
 }
 
 void Transport::init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
-    init_local_info(data_mr, ctrl_mr, gid_idx);
+    this->data_mr = data_mr;
+    this->ctrl_mr = ctrl_mr;    // these are not in the constructor since init() needs to wait until mbuf is contructed
+    init_local_info(gid_idx);
 
     create_cq();
     create_qp();
@@ -302,6 +304,29 @@ void Transport::init(const char *server_addr, struct ibv_mr *data_mr, struct ibv
 
     modify_qp_to_RTR();     // sl = 0
     modify_qp_to_RTS();
+}
+
+void Transport::post_ATOMIC_FA(uint64_t compare_add) {
+    struct ibv_sge sg;
+    struct ibv_send_wr wr;
+    struct ibv_send_wr *bad_wr;
+
+    sg.addr	  = reinterpret_cast<uintptr_t>(ctrl_mr->addr);
+    sg.length = sizeof(uint64_t);
+    sg.lkey	  = ctrl_mr->lkey;
+
+    memset(&wr, 0, sizeof(wr));
+    wr.wr_id      = 0;
+    wr.sg_list    = &sg;
+    wr.num_sge    = 1;
+    wr.opcode     = IBV_WR_ATOMIC_FETCH_AND_ADD;
+    wr.send_flags = IBV_SEND_SIGNALED;
+    wr.wr.atomic.remote_addr = remote_info.ctrl_vaddr;
+    wr.wr.atomic.rkey        = remote_info.ctrl_rkey;
+    //wr.wr.atomic.compare_add = num_msg * sizeof(T);
+    wr.wr.atomic.compare_add = compare_add;
+
+    assert_exit(ibv_post_send(qp, &wr, &bad_wr) == 0, "Failed to post sr to fetch & add write addr.");
 }
 
 }

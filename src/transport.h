@@ -46,8 +46,10 @@ private:
     struct ibv_cq *cq;                  // for both sq & rq
     struct ibv_comp_channel *channel;   // for both sq & rq
     struct ibv_qp *qp;
-    struct dest_info remote_info;          // remote node info
-    struct dest_info local_info;           // local node info
+    struct dest_info remote_info;       // remote node info
+    struct dest_info local_info;        // local node info
+    struct ibv_mr *data_mr;             // MR for data exchange, which Procuder::data_buf holds
+    struct ibv_mr *ctrl_mr;             // MR for control such as offset, which Procuder::ctrl_buf holds
 
     void open_device_and_alloc_pd();
 
@@ -58,7 +60,7 @@ private:
     void create_qp();
 
     // init local_info
-    void init_local_info(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx);
+    void init_local_info(int gid_idx);
 
     // gets called after create_qp();
     void modify_qp_to_INIT();
@@ -83,6 +85,21 @@ public:
     // init transport (between sender & receiver) after MessageBuffer is constructed
     // After init() returns, qp has transited to RTS.
     void init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx = -1);
+
+    // poll wc from cq
+    void poll_from_cq();
+    
+    // post a send request using ATOMIC_FETCH_AND_ADD
+    // Note: value read is put in ctrl_mr
+    void post_ATOMIC_FA(uint64_t compare_add);
+
+    // post a send request using RDMA_WRITE_WITH_IMM
+    // Note: uses data_mr
+    void post_WRITE_IMM();
+
+    // post a send request using RMDA_READ
+    // Note: uses data_mr
+    void post_READ();
 
 };
 
