@@ -46,7 +46,7 @@ private:
     struct ibv_cq *cq;                  // for both sq & rq
     struct ibv_comp_channel *channel;   // for both sq & rq
     struct ibv_qp *qp;
-    struct dest_info remote_info;          // remote node info (*mr only has rkey & vaddr)
+    struct dest_info remote_info;          // remote node info
     struct dest_info local_info;           // local node info
 
     void open_device_and_alloc_pd();

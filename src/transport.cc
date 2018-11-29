@@ -287,7 +287,7 @@ void Transport::hand_shake_server() {
 }
 
 void Transport::init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
-    init_local_info(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, gid_idx);
+    init_local_info(data_mr, ctrl_mr, gid_idx);
 
     create_cq();
     create_qp();
