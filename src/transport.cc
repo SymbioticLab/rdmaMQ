@@ -88,7 +88,7 @@ void Transport::create_qp() {
     assert_exit(qp, "Failed to create QP.");
 }
 
-void Transport::init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
+void Transport::init_my_dest(int gid_idx) {
     LOG_DEBUG("gid_idx is %d.\n", gid_idx);
     struct ibv_port_attr port_attr;
 	assert_exit(ibv_query_port(pd->context, tr_phy_port_num, &port_attr) == 0, "Failed to query ib port.");
@@ -96,8 +96,10 @@ void Transport::init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int
     my_dest.lid = port_attr.lid;
     my_dest.qpn = qp->qp_num;
     my_dest.psn = lrand48() & 0xffffff;
-    my_dest.data_mr = data_mr;      // mrs better live long
-    my_dest.ctrl_mr = ctrl_mr;
+    my_dest.data_rkey = data_mr->rkey;
+    my_dest.data_vaddr = reinterpret_cast<uintptr_t>(data_mr->addr);
+    my_dest.ctrl_rkey = ctrl_mr->rkey;
+    my_dest.ctrl_vaddr = reinterpret_cast<uintptr_t>(ctrl_mr->addr);
     my_dest.gid_idx = gid_idx;
 
     if (gid_idx >= 0) {
@@ -191,7 +193,7 @@ void Transport::modify_qp_to_RTS() {
 void Transport::hand_shake_client(const char * server_addr) {
     struct addrinfo *res, *t, hints;
     char *service;
-    char msg[sizeof "0000:000000:000000:00000000:0000000000000000:00000000000000000000000000000000"];
+    char msg[sizeof "0000:000000:000000:00000000:0000000000000000:00000000:0000000000000000:00000000000000000000000000000000"];
     int sockfd = -1;
     char gid[33];
 
@@ -216,8 +218,9 @@ void Transport::hand_shake_client(const char * server_addr) {
     assert_exit(sockfd == 0, "Error connecting to server via socket.");
 
     gid_to_wire_gid(&my_dest.gid, gid);
-    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
-                my_dest.psn, my_dest.rkey, my_dest.vaddr, gid);
+    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
+                my_dest.psn, my_dest.data_rkey, my_dest.data_vaddr,
+                my_dest.ctrl_rkey, my_dest.ctrl_vaddr, gid);
 
     assert_exit(write(sockfd, msg, sizeof(msg)) == sizeof(msg), "Error sending local node info.");
 
@@ -225,8 +228,9 @@ void Transport::hand_shake_client(const char * server_addr) {
 
     assert_exit(write(sockfd, "done", sizeof("done")) == sizeof("done"), "Error sending done message");
 
-    sscanf(msg, "%hu:%x:%x:%x:%lx:%s", &rem_dest.lid, &rem_dest.qpn,
-                &rem_dest.psn, &rem_dest.rkey, &rem_dest.vaddr, gid);
+    sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &rem_dest.lid, &rem_dest.qpn,
+                &rem_dest.psn, &rem_dest.data_rkey, &rem_dest.data_vaddr,
+                &rem_dest.ctrl_rkey, &rem_dest.ctrl_vaddr, gid);
     wire_gid_to_gid(gid, &rem_dest.gid);
     LOG_DEBUG("Client hand shake done.\n");
 }
@@ -234,7 +238,7 @@ void Transport::hand_shake_client(const char * server_addr) {
 void Transport::hand_shake_server() {
     struct addrinfo *res, *t, hints;
     char *service;
-    char msg[sizeof "0000:000000:000000:00000000:0000000000000000:00000000000000000000000000000000"];
+    char msg[sizeof "0000:000000:000000:00000000:0000000000000000:00000000:0000000000000000:00000000000000000000000000000000"];
     int sockfd = -1, connfd, optval = 1;
     char gid[33];
 
@@ -267,21 +271,26 @@ void Transport::hand_shake_server() {
     
     assert_exit(recv(connfd, msg, sizeof(msg), MSG_WAITALL) == sizeof(msg), "Error recving remote node info: " + std::string(strerror(errno)) + ".");
 
-    sscanf(msg, "%hu:%x:%x:%x:%lx:%s", &rem_dest.lid, &rem_dest.qpn,
-                &rem_dest.psn, &rem_dest.rkey, &rem_dest.vaddr, gid);
+    sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &rem_dest.lid, &rem_dest.qpn,
+                &rem_dest.psn, &rem_dest.data_rkey, &rem_dest.data_vaddr,
+                &rem_dest.ctrl_rkey, &rem_dest.ctrl_vaddr, gid);
     wire_gid_to_gid(gid, &rem_dest.gid);
 
     gid_to_wire_gid(&my_dest.gid, gid);
-    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
-                my_dest.psn, my_dest.rkey, my_dest.vaddr, gid);
+    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
+                my_dest.psn, my_dest.data_rkey, my_dest.data_vaddr,
+                my_dest.ctrl_rkey, my_dest.ctrl_vaddr, gid);
     assert_exit(write(connfd, msg, sizeof(msg)) == sizeof(msg), "Error sending local node info.");
 
     assert_exit(recv(connfd, msg, sizeof("done"), MSG_WAITALL) == sizeof("done"), "Error recving done message");
     LOG_DEBUG("Server hand shake done.\n");
 }
 
-void Transport::init(const char *server_addr, struct ibv_struct *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
-    init_my_dest(data_mr, ctrl_mr, gid_idx);
+void Transport::init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
+    this->data_mr = data_mr;    // MRs better live long
+    this->ctrl_mr = ctrl_mr;    // they are not in the constructor because MessageBuffer needs to be constructed after Transport
+    init_my_dest(gid_idx);
+
     create_cq();
     create_qp();
     

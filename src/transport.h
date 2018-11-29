@@ -17,8 +17,10 @@ struct dest_info {
     uint32_t qpn;
     uint32_t psn;
     int gid_idx;
-    struct ibv_mr *data_mr;
-    struct ibv_mr *ctrl_mr;
+    uint32_t data_rkey;
+    uint64_t data_vaddr;
+    uint32_t ctrl_rkey;
+    uint64_t ctrl_vaddr;
     union ibv_gid gid;
 };
 
@@ -44,8 +46,10 @@ private:
     struct ibv_cq *cq;                  // for both sq & rq
     struct ibv_comp_channel *channel;   // for both sq & rq
     struct ibv_qp *qp;
-    struct dest_info rem_dest;       // remote node info
+    struct dest_info rem_dest;          // remote node info (*mr only has rkey & vaddr)
     struct dest_info my_dest;           // local node info
+    struct ibv_mr *data_mr;             // local data mr
+    struct ibv_mr *ctrl_mr;             // local ctrl mr (w/ atomic ops)
 
     void open_device_and_alloc_pd();
 
@@ -56,7 +60,7 @@ private:
     void create_qp();
 
     // init my_dest
-    void init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx);
+    void init_my_dest(int gid_idx);
 
     // gets called after create_qp();
     void modify_qp_to_INIT();

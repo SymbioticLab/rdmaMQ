@@ -37,24 +37,24 @@ private:
     /**
      * register a memory region for RDMA
      */
-    void init(struct ibv_pd *pd);
+    void init(struct ibv_pd *pd, int need_atomic);
 
 public:
     MessageBuffer() {}
-    MessageBuffer(size_t capacity, struct ibv_pd *pd)
+    MessageBuffer(size_t capacity, struct ibv_pd *pd, int need_atomic = 0)
     : capacity(capacity),
       num_blocks(0),
       block_size(sizeof(T)),
       total_size(capacity * sizeof(T)),
       data(nullptr) {
-        init(pd);
+        init(pd, need_atomic);
     }
     ~MessageBuffer() {
         assert_exit(ibv_dereg_mr(mr) == 0, "Error deregister mr.");
         delete[] data;
     }
 
-    inline T *get_data() { return data; }
+    inline T *get_data() { return data; }   // TODO: check if this is exact what mr->data
     inline struct ibv_mr* get_mr() { return mr; }
 
 };

@@ -42,7 +42,7 @@ public:
     : broker_ip(std::string(broker_ip)) {
         transport = std::make_unique<Transport>();
         data_buf = std::make_unique<MessageBuffer<int>> MessageBuffer(data_buf_cap, transport->get_pd());
-        ctrl_buf = std::make_unique<MessageBuffer<uint64_t>> MessageBuffer(1, transport->get_pd());
+        ctrl_buf = std::make_unique<MessageBuffer<uint64_t>> MessageBuffer(1, transport->get_pd(), 1);
     }
     ~Producer() {}
 
