@@ -60,7 +60,7 @@ private:
     void create_qp();
 
     // init my_dest
-    void init_my_dest(int gid_idx);
+    void init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx);
 
     // gets called after create_qp();
     void modify_qp_to_INIT();

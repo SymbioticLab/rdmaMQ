@@ -88,7 +88,7 @@ void Transport::create_qp() {
     assert_exit(qp, "Failed to create QP.");
 }
 
-void Transport::init_my_dest(int gid_idx) {
+void Transport::init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
     LOG_DEBUG("gid_idx is %d.\n", gid_idx);
     struct ibv_port_attr port_attr;
 	assert_exit(ibv_query_port(pd->context, tr_phy_port_num, &port_attr) == 0, "Failed to query ib port.");
@@ -287,9 +287,7 @@ void Transport::hand_shake_server() {
 }
 
 void Transport::init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
-    this->data_mr = data_mr;    // MRs better live long
-    this->ctrl_mr = ctrl_mr;    // they are not in the constructor because MessageBuffer needs to be constructed after Transport
-    init_my_dest(gid_idx);
+    init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, gid_idx);
 
     create_cq();
     create_qp();
