@@ -2,6 +2,7 @@
 #define PRODUCER_H_
 
 #include "mbuf.h"
+#include "transport.h"
 
 namespace rmq {
 
@@ -28,34 +29,32 @@ namespace rmq {
 template <typename T>
 class Producer {
 private:
-    std::unique<MessageBuffer<int>> data_buf;           // assume type int for now
-    std::unique<MessageBuffer<uint64_t>> ctrl_buf;      // store write_addr
+    std::unique_ptr<MessageBuffer<T>> data_buf;             // assume one buffer for now
+    std::unique_ptr<MessageBuffer<uint64_t>> ctrl_buf;      // store write_addr
     std::unique_ptr<Transport> transport;
     std::string broker_ip;
 
-    long get_write_addr();
-
-
 public:
     Producer() {}
-    Producer(size_t data_buf_cap, char *broker_ip)
+    Producer(size_t data_buf_cap, std::string broker_ip)
     : broker_ip(std::string(broker_ip)) {
         transport = std::make_unique<Transport>();
-        data_buf = std::make_unique<MessageBuffer<int>> MessageBuffer(data_buf_cap, transport->get_pd());
-        ctrl_buf = std::make_unique<MessageBuffer<uint64_t>> MessageBuffer(1, transport->get_pd(), 1);
+        data_buf = std::make_unique<MessageBuffer<T>>(data_buf_cap, transport->get_pd());
+        ctrl_buf = std::make_unique<MessageBuffer<uint64_t>>(1, transport->get_pd(), 1);
     }
     ~Producer() {}
 
     void init_transport(int gid_idx) {
-        transport.init(broker_ip.c_str(), data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
+        transport->init(broker_ip.c_str(), data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
-    // assume we only talk to one broker/topic now
-    // later can specify which topic
+    int fetch_and_add_write_addr();
 
-    int push();
+    // assume only one databuf sends to only one broker
+    // num_msg = # of data blocks to send in a batch
+    int push(size_t num_msg);
 
-}
+};
 
 
 

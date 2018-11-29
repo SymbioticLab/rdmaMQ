@@ -1,7 +1,7 @@
 CC = g++ -std=c++14
 CPPFLAGS = -g -Wall
 LDLIBS = -lpthread -lrt -libverbs -lm
-OBJS = main.o mbuf.o transport.o
+OBJS = main.o mbuf.o transport.o producer.o
 
 APPS = test
 
@@ -18,6 +18,9 @@ mbuf.o:
 
 transport.o:
 	$(CC) $(CPPFLAGS) -c transport.cc
+
+producer.o:
+	$(CC) $(CPPFLAGS) -c producer.cc
 
 clean:
 	rm -f *.o ${APPS}
