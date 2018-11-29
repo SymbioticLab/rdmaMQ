@@ -88,22 +88,22 @@ void Transport::create_qp() {
     assert_exit(qp, "Failed to create QP.");
 }
 
-void Transport::init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
+void Transport::init_local_info(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
     LOG_DEBUG("gid_idx is %d.\n", gid_idx);
     struct ibv_port_attr port_attr;
 	assert_exit(ibv_query_port(pd->context, tr_phy_port_num, &port_attr) == 0, "Failed to query ib port.");
 
-    my_dest.lid = port_attr.lid;
-    my_dest.qpn = qp->qp_num;
-    my_dest.psn = lrand48() & 0xffffff;
-    my_dest.data_rkey = data_mr->rkey;
-    my_dest.data_vaddr = reinterpret_cast<uintptr_t>(data_mr->addr);
-    my_dest.ctrl_rkey = ctrl_mr->rkey;
-    my_dest.ctrl_vaddr = reinterpret_cast<uintptr_t>(ctrl_mr->addr);
-    my_dest.gid_idx = gid_idx;
+    local_info.lid = port_attr.lid;
+    local_info.qpn = qp->qp_num;
+    local_info.psn = lrand48() & 0xffffff;
+    local_info.data_rkey = data_mr->rkey;
+    local_info.data_vaddr = reinterpret_cast<uintptr_t>(data_mr->addr);
+    local_info.ctrl_rkey = ctrl_mr->rkey;
+    local_info.ctrl_vaddr = reinterpret_cast<uintptr_t>(ctrl_mr->addr);
+    local_info.gid_idx = gid_idx;
 
     if (gid_idx >= 0) {
-        assert_exit(ibv_query_gid(pd->context, tr_phy_port_num, gid_idx, &my_dest.gid) == 0, "Failed to query local gid.");
+        assert_exit(ibv_query_gid(pd->context, tr_phy_port_num, gid_idx, &local_info.gid) == 0, "Failed to query local gid.");
     }
 }
 
@@ -137,22 +137,22 @@ void Transport::modify_qp_to_RTR(uint8_t sl) {
     memset(&attr, 0, sizeof(attr));
     attr.qp_state               = IBV_QPS_RTR;
     attr.path_mtu               = get_ibv_mtu(tr_path_mtu);
-    attr.dest_qp_num            = rem_dest.qpn;
-    attr.rq_psn                 = rem_dest.psn;
+    attr.dest_qp_num            = remote_info.qpn;
+    attr.rq_psn                 = remote_info.psn;
     attr.max_dest_rd_atomic     = 1;
     attr.min_rnr_timer          = 12;
     attr.ah_attr.is_global      = 0;
-    attr.ah_attr.dlid           = rem_dest.lid;
+    attr.ah_attr.dlid           = remote_info.lid;
     attr.ah_attr.sl             = sl;
     attr.ah_attr.src_path_bits  = 0;
     attr.ah_attr.port_num       = tr_phy_port_num;
 
     // check for RoCE
-    if (rem_dest.gid.global.interface_id) {
+    if (remote_info.gid.global.interface_id) {
 		attr.ah_attr.is_global = 1;
 		attr.ah_attr.grh.hop_limit = 1;
-		attr.ah_attr.grh.dgid = rem_dest.gid;
-		attr.ah_attr.grh.sgid_index = my_dest.gid_idx;
+		attr.ah_attr.grh.dgid = remote_info.gid;
+		attr.ah_attr.grh.sgid_index = local_info.gid_idx;
 	}
 
     assert_exit(ibv_modify_qp(qp, &attr,
@@ -174,7 +174,7 @@ void Transport::modify_qp_to_RTS() {
 
     memset(&attr, 0, sizeof(struct ibv_qp_attr));
     attr.qp_state	    = IBV_QPS_RTS;
-    attr.sq_psn	        = my_dest.psn;
+    attr.sq_psn	        = local_info.psn;
     attr.timeout	    = 14;
     attr.retry_cnt	    = 7;
     attr.rnr_retry	    = 7;    //infinite
@@ -217,10 +217,10 @@ void Transport::hand_shake_client(const char * server_addr) {
     free(service);
     assert_exit(sockfd == 0, "Error connecting to server via socket.");
 
-    gid_to_wire_gid(&my_dest.gid, gid);
-    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
-                my_dest.psn, my_dest.data_rkey, my_dest.data_vaddr,
-                my_dest.ctrl_rkey, my_dest.ctrl_vaddr, gid);
+    gid_to_wire_gid(&local_info.gid, gid);
+    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", local_info.lid, local_info.qpn,
+                local_info.psn, local_info.data_rkey, local_info.data_vaddr,
+                local_info.ctrl_rkey, local_info.ctrl_vaddr, gid);
 
     assert_exit(write(sockfd, msg, sizeof(msg)) == sizeof(msg), "Error sending local node info.");
 
@@ -228,10 +228,10 @@ void Transport::hand_shake_client(const char * server_addr) {
 
     assert_exit(write(sockfd, "done", sizeof("done")) == sizeof("done"), "Error sending done message");
 
-    sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &rem_dest.lid, &rem_dest.qpn,
-                &rem_dest.psn, &rem_dest.data_rkey, &rem_dest.data_vaddr,
-                &rem_dest.ctrl_rkey, &rem_dest.ctrl_vaddr, gid);
-    wire_gid_to_gid(gid, &rem_dest.gid);
+    sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &remote_info.lid, &remote_info.qpn,
+                &remote_info.psn, &remote_info.data_rkey, &remote_info.data_vaddr,
+                &remote_info.ctrl_rkey, &remote_info.ctrl_vaddr, gid);
+    wire_gid_to_gid(gid, &remote_info.gid);
     LOG_DEBUG("Client hand shake done.\n");
 }
 
@@ -271,15 +271,15 @@ void Transport::hand_shake_server() {
     
     assert_exit(recv(connfd, msg, sizeof(msg), MSG_WAITALL) == sizeof(msg), "Error recving remote node info: " + std::string(strerror(errno)) + ".");
 
-    sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &rem_dest.lid, &rem_dest.qpn,
-                &rem_dest.psn, &rem_dest.data_rkey, &rem_dest.data_vaddr,
-                &rem_dest.ctrl_rkey, &rem_dest.ctrl_vaddr, gid);
-    wire_gid_to_gid(gid, &rem_dest.gid);
+    sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &remote_info.lid, &remote_info.qpn,
+                &remote_info.psn, &remote_info.data_rkey, &remote_info.data_vaddr,
+                &remote_info.ctrl_rkey, &remote_info.ctrl_vaddr, gid);
+    wire_gid_to_gid(gid, &remote_info.gid);
 
-    gid_to_wire_gid(&my_dest.gid, gid);
-    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", my_dest.lid, my_dest.qpn,
-                my_dest.psn, my_dest.data_rkey, my_dest.data_vaddr,
-                my_dest.ctrl_rkey, my_dest.ctrl_vaddr, gid);
+    gid_to_wire_gid(&local_info.gid, gid);
+    sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", local_info.lid, local_info.qpn,
+                local_info.psn, local_info.data_rkey, local_info.data_vaddr,
+                local_info.ctrl_rkey, local_info.ctrl_vaddr, gid);
     assert_exit(write(connfd, msg, sizeof(msg)) == sizeof(msg), "Error sending local node info.");
 
     assert_exit(recv(connfd, msg, sizeof("done"), MSG_WAITALL) == sizeof("done"), "Error recving done message");
@@ -287,7 +287,7 @@ void Transport::hand_shake_server() {
 }
 
 void Transport::init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx) {
-    init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, gid_idx);
+    init_local_info(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, gid_idx);
 
     create_cq();
     create_qp();

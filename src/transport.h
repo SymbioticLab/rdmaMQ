@@ -46,8 +46,8 @@ private:
     struct ibv_cq *cq;                  // for both sq & rq
     struct ibv_comp_channel *channel;   // for both sq & rq
     struct ibv_qp *qp;
-    struct dest_info rem_dest;          // remote node info (*mr only has rkey & vaddr)
-    struct dest_info my_dest;           // local node info
+    struct dest_info remote_info;          // remote node info (*mr only has rkey & vaddr)
+    struct dest_info local_info;           // local node info
 
     void open_device_and_alloc_pd();
 
@@ -57,8 +57,8 @@ private:
     // create RC qp
     void create_qp();
 
-    // init my_dest
-    void init_my_dest(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx);
+    // init local_info
+    void init_local_info(struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx);
 
     // gets called after create_qp();
     void modify_qp_to_INIT();
