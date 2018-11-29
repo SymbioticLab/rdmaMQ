@@ -12,12 +12,12 @@ void Producer<T>::fetch_and_add_write_addr(size_t num_msg) {
 }
 
 template <typename T>
-size_t Producer<T>::push(size_t num_msg) {
+size_t Producer<T>::push(size_t start_idx, size_t num_msg) {
     fetch_and_add_write_addr(num_msg);
     uint64_t write_addr = reinterpret_cast<uintptr_t>(ctrl_buf->get_data());
     LOG_DEBUG("getting WRITE ADDR: %" PRIu64 "\n", write_addr);
     // post WRITE_with_IMM
-     
+
 }
 
 }

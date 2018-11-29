@@ -23,7 +23,12 @@ namespace rmq {
  * User needs to manually call init_tranport() after constructing Producer.
  * 
  * Currently we don't support one producer pushing to multiple topics
- * or brokers.
+ * or brokers. Which broker to push to is decided when constructing Producer.
+ * 
+ * Usage:
+ *      First call Producer custom constructor.
+ *      Then construct data_buf and ctrl_buf.
+ *      Then call Producer::init_transport() to complete the setup.
  */
 
 template <typename T>
@@ -46,13 +51,15 @@ public:
     }
     ~Producer() {}
 
+    // gets called after constrcut mbuf
     void init_transport(int gid_idx) {
         transport->init(broker_ip.c_str(), data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
-    // assume only one databuf sends to only one broker
-    // num_msg = # of data blocks to send in a batch
-    size_t push(size_t num_msg);
+    // start_idx: indicates the starting address of the data in the buffer pushed to the broker
+    // num_msg: # of data blocks to send in a batch
+    // e.g., push(0, 2) pushes the first 2 elements in the buffer to the broker
+    size_t push(size_t start_idx, size_t num_msg);
 
 };
 
