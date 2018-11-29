@@ -34,6 +34,8 @@ private:
     std::unique_ptr<Transport> transport;
     std::string broker_ip;
 
+    void fetch_and_add_write_addr(size_t num_msg);
+
 public:
     Producer() {}
     Producer(size_t data_buf_cap, std::string broker_ip)
@@ -48,11 +50,9 @@ public:
         transport->init(broker_ip.c_str(), data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
-    int fetch_and_add_write_addr();
-
     // assume only one databuf sends to only one broker
     // num_msg = # of data blocks to send in a batch
-    int push(size_t num_msg);
+    size_t push(size_t num_msg);
 
 };
 
