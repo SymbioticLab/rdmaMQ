@@ -42,12 +42,13 @@ class Transport {
 //template<typename T>
 //friend class MessageBuffer<T>;
 private:
+    size_t num_qp;
     struct ibv_pd *pd;                  // contains ibv_context once created
-    struct ibv_cq *cq;                  // for both sq & rq
-    struct ibv_comp_channel *channel;   // for both sq & rq
-    struct ibv_qp *qp;
-    struct dest_info remote_info;       // remote node info
-    struct dest_info local_info;        // local node info
+    struct ibv_cq **cq;                  // for both sq & rq
+    struct ibv_comp_channel **channel;   // for both sq & rq
+    struct ibv_qp **qp;
+    struct dest_info *remote_info;       // remote node info
+    struct dest_info *local_info;        // local node info
     struct ibv_mr *data_mr;             // MR for data exchange, which Procuder::data_buf holds
     struct ibv_mr *ctrl_mr;             // MR for control such as offset, which Procuder::ctrl_buf holds
 
@@ -70,34 +71,41 @@ private:
     void modify_qp_to_RTS();
 
     // exchange node info for RDMA (routing, raddr, etc.)
-    void hand_shake_client(const char * server_addr);
-    void hand_shake_server();
+    void hand_shake_client(size_t qp_idx, const char * server_addr);
+    void hand_shake_server(size_t qp_idx);
 
 public:
     Transport() { open_device_and_alloc_pd(); }
     //Transport(int is_server): is_server(is_server) { init(); };
-    ~Transport() {}
+    ~Transport() {
+        delete[] local_info;
+        delete[] remote_info;
+        delete[] channel;
+        delete[] cq;
+        delete[] qp;
+    }
     inline struct ibv_context *ibv_get_ctx() { return pd->context; }
     inline struct ibv_pd *get_pd() { return pd; }
-    inline struct ibv_qp *get_qp() { return qp; }
-    inline struct ibv_cq *get_cq() { return cq; }
+    inline struct ibv_qp **get_qp() { return qp; }
+    inline struct ibv_cq **get_cq() { return cq; }
 
     // init transport (between sender & receiver) after MessageBuffer is constructed
     // After init() returns, qp has transited to RTS.
-    void init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx = -1);
+    // qp_num : number of qps and (same) number of cqs/comp_channels (send_cq/recv_cq shared)
+    void init(const char *server_addr, size_t num_qp, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx = -1);
 
     // poll wc from cq
-    void poll_from_cq(int num_entries);
+    void poll_from_cq(size_t qp_idx, int num_entries);
     
     // post a send request using ATOMIC_FETCH_AND_ADD
     // used by Producer to get write addr from the broker
     // value read is put in ctrl_mr
-    void post_ATOMIC_FA(uint64_t compare_add);
+    void post_ATOMIC_FA(size_t qp_idx, uint64_t compare_add);
 
     // post a send request using RDMA_WRITE
     // uses data_mr
     // local_addr specifies sge.addr in local buffer,
-    void post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote_addr);
+    void post_WRITE(size_t qp_idx, uint64_t local_addr, uint32_t length, uint64_t remote_addr);
 
     // post a send request using RMDA_READ
     // uses data_mr
