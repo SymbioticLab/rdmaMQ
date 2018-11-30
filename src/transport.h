@@ -95,17 +95,17 @@ public:
     void init(const char *server_addr, size_t num_qp, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx = -1);
 
     // poll wc from cq
-    void poll_from_cq(size_t qp_idx, int num_entries);
+    void poll_from_cq(int num_entries, size_t qp_idx = 0);
     
     // post a send request using ATOMIC_FETCH_AND_ADD
     // used by Producer to get write addr from the broker
     // value read is put in ctrl_mr
-    void post_ATOMIC_FA(size_t qp_idx, uint64_t compare_add);
+    void post_ATOMIC_FA(uint64_t compare_add, size_t qp_idx = 0);
 
     // post a send request using RDMA_WRITE
     // uses data_mr
     // local_addr specifies sge.addr in local buffer,
-    void post_WRITE(size_t qp_idx, uint64_t local_addr, uint32_t length, uint64_t remote_addr);
+    void post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote_addr, size_t qp_idx = 0);
 
     // post a send request using RMDA_READ
     // uses data_mr

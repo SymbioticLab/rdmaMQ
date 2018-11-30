@@ -53,7 +53,7 @@ public:
 
     // gets called after constructing mbuf
     void init_transport(int gid_idx) {
-        transport->init(broker_ip.c_str(), data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
+        transport->init(broker_ip.c_str(), 1, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
     // start_idx: indicates the starting address of the data in the buffer pushed to the broker

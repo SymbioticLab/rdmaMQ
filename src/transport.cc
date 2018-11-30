@@ -334,7 +334,7 @@ void Transport::init(const char *server_addr, size_t num_qp, struct ibv_mr *data
     modify_qp_to_RTS();
 }
 
-void Transport::poll_from_cq(size_t qp_idx, int num_entries) {
+void Transport::poll_from_cq(int num_entries, size_t qp_idx) {
     // TODO: add event-triggered polling later
     int ne = 0;
     struct ibv_wc wc;
@@ -346,7 +346,7 @@ void Transport::poll_from_cq(size_t qp_idx, int num_entries) {
                 std::string(ibv_wc_status_str(wc.status)) + ".");
 }
 
-void Transport::post_ATOMIC_FA(size_t qp_idx, uint64_t compare_add) {
+void Transport::post_ATOMIC_FA(uint64_t compare_add, size_t qp_idx) {
     struct ibv_sge sg;
     struct ibv_send_wr wr;
     struct ibv_send_wr *bad_wr;
@@ -368,7 +368,7 @@ void Transport::post_ATOMIC_FA(size_t qp_idx, uint64_t compare_add) {
     assert_exit(ibv_post_send(qp[qp_idx], &wr, &bad_wr) == 0, "Failed to post sr to fetch & add write addr.");
 }
 
-void Transport::post_WRITE(size_t qp_idx, uint64_t local_addr, uint32_t length, uint64_t remote_addr) {
+void Transport::post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote_addr, size_t qp_idx) {
     struct ibv_sge sg;
     struct ibv_send_wr wr;
     struct ibv_send_wr *bad_wr;

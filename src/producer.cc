@@ -39,10 +39,10 @@ size_t Producer<T>::push(size_t start_idx, size_t num_msg) {
     // atomically get next_write_idx and set new idx at the broker
     num_msg = fetch_and_add_write_idx(num_msg);
 
-    uint64_t local_addr = start_idx * sizeof(T) + transport->local_info.data_vaddr;
+    uint64_t local_addr = start_idx * sizeof(T) + transport->local_info[0].data_vaddr;
     uint32_t length = num_msg * sizeof(T);
     uint64_t write_idx = ctrl_buf->get_data()[0] & bkr_low_mask;
-    uint64_t remote_addr = write_idx * sizeof(T) + transport->remote_info.data_vaddr;
+    uint64_t remote_addr = write_idx * sizeof(T) + transport->remote_info[0].data_vaddr;
     transport->post_WRITE(local_addr, length, remote_addr);
 
     transport->poll_from_cq(1);
