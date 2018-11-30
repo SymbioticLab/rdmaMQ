@@ -12,8 +12,12 @@ namespace rmq {
     /* Broker buffer config */
     //constexpr int bkr_x = 18;        // 2^18 is # of data blocks broker buffer contains
     //constexpr size_t bkr_buff_cap = 262144; // 2^18 = 256 KB
+    //constexpr uint64_t bkr_high_mask = 0xFFFFFFFFFFFC0000LL;
+    //constexpr uint64_t bkr_low_mask = 0x3FFFFLL;
     constexpr int bkr_x = 10;
     constexpr size_t bkr_buff_cap = 1024;
+    constexpr uint64_t bkr_high_mask = 0xFFFFFFFFFFFFFC00LL;
+    constexpr uint64_t bkr_low_mask = 0x3FFLL;
 
     /* RDMA transport config */
     constexpr int tr_max_cqe = 10000;
