@@ -7,22 +7,22 @@
 namespace rmq {
 
 /**
- * Producer creates MessageBuffers and push their content to
- * the broker. A producer pick which idx and length of the
+ * Producers create MessageBuffers and push their content to
+ * the broker. A Producer picks which idx and length of the
  * buffer to push. Connection setup is done after each buffer
  * is created. There is another mr for control msg (e.g. remote
  * write addr) used with atomic ib verbs
  * 
- * For simplicity, each producer only creates one buffer instead
+ * For simplicity, each Producer only creates one buffer instead
  * of multiple with different types.
  * 
- * In the aspect of tranport, producer is a sender rather than
- * receiver. User will pass in the ip of the receiver (in this
+ * In the aspect of tranport, a Producer is a sender rather than
+ * a receiver. Users will pass in the ip of the receiver (in this
  * case the broker) to set up RDMA connection.
  * 
- * User needs to manually call init_tranport() after constructing Producer.
+ * Users need to manually call init_tranport() after constructing Producer.
  * 
- * Currently we don't support one producer pushing to multiple topics
+ * Currently we don't support one Producer pushing to multiple topics
  * or brokers. Which broker to push to is decided when constructing Producer.
  * 
  * Usage:
