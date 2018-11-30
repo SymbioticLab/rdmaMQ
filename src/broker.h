@@ -22,9 +22,14 @@ namespace rmq {
  * 
  * 
  * Usage:
- *      First call Broker custom constructor,
- *      which constructs data_buf and ctrl_buf.
+ *      Broker needs to connect with producer. and consumers.
+ *      First call Broker custom constructor.
  *      Then call Broker::init_transport() to complete the setup.
+ *      Then construct Producer and call Producer::init_transport().
+ *      Then construct Consumer and call Consumer::init_transport().
+ * 
+ *      User should let Producer first connect, then Consumer.
+ *      TODO: better cluster initalization mechanism.
  */
 
 template <typename T>
@@ -41,14 +46,17 @@ public:
         data_buf = new MessageBuffer<T>(bkr_buff_cap, transport->get_pd());
         ctrl_buf = new MessageBuffer<uint64_t>(1, transport->get_pd(), 1);
     }
-    ~Broker() {}
+    ~Broker() {
+        delete data_buf;
+        delete ctrl_buf;
+    }
 
     // gets called after constructing mbuf
     void init_transport(int gid_idx) {
         // initialize ctrl_buf (which contains loop_cnt and write_idx)
         memset(ctrl_buf->get_data(), 0, ctrl_buf->get_block_size());
 
-        transport->init(data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
+        transport->init(data_buf->get_mr(), 2, ctrl_buf->get_mr(), gid_idx);
     }
 
 };

@@ -88,6 +88,7 @@ public:
     inline struct ibv_pd *get_pd() { return pd; }
     inline struct ibv_qp **get_qp() { return qp; }
     inline struct ibv_cq **get_cq() { return cq; }
+    inline size_t get_num_qp() { return num_qp; }
 
     // init transport (between sender & receiver) after MessageBuffer is constructed
     // After init() returns, qp has transited to RTS.
