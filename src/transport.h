@@ -94,7 +94,7 @@ public:
     // value read is put in ctrl_mr
     void post_ATOMIC_FA(uint64_t compare_add);
 
-    // post a send request using RDMA_WRITE_WITH_IMM
+    // post a send request using RDMA_WRITE
     // uses data_mr
     // local_addr specifies sge.addr in local buffer,
     void post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote_addr);

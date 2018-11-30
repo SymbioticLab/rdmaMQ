@@ -3,6 +3,7 @@
 #include "mbuf.h"
 #include "transport.h"
 #include "producer.h"
+#include "broker.h"
 
 int main() {
 	//auto transport = std::make_shared<rmq::Transport>();
