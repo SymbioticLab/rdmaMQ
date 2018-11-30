@@ -30,15 +30,16 @@ namespace rmq {
 template <typename T>
 class Broker {
 private:
-    std::unique_ptr<MessageBuffer<T>> data_buf;             // assume one buffer for now
-    std::unique_ptr<MessageBuffer<uint64_t>> ctrl_buf;      // store write_addr
+    // For broker, mbuf is not unique (shared by at producers and consumers)
+    MessageBuffer<T> *data_buf;             // assume one buffer for now
+    MessageBuffer<uint64_t> *ctrl_buf;      // store write_addr
     std::unique_ptr<Transport> transport;
 
 public:
     Broker() {
         transport = std::make_unique<Transport>();
-        data_buf = std::make_unique<MessageBuffer<T>>(bkr_buff_cap, transport->get_pd());
-        ctrl_buf = std::make_unique<MessageBuffer<uint64_t>>(1, transport->get_pd(), 1);
+        data_buf = new MessageBuffer<T>(bkr_buff_cap, transport->get_pd());
+        ctrl_buf = new MessageBuffer<uint64_t>(1, transport->get_pd(), 1);
     }
     ~Broker() {}
 
