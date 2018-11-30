@@ -329,7 +329,7 @@ void Transport::post_ATOMIC_FA(uint64_t compare_add) {
     assert_exit(ibv_post_send(qp, &wr, &bad_wr) == 0, "Failed to post sr to fetch & add write addr.");
 }
 
-void Transport::poll_from_cq(size_t num_entries) {
+void Transport::poll_from_cq(int num_entries) {
     // TODO: add event-triggered polling later
     int ne = 0;
     struct ibv_wc wc;
@@ -339,6 +339,28 @@ void Transport::poll_from_cq(size_t num_entries) {
 
     assert_exit(wc.status == IBV_WC_SUCCESS, "polled wc status not SUCCESS: " + 
                 std::string(ibv_wc_status_str(wc.status)) + ".");
+}
+
+void Transport::post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote_addr) {
+    struct ibv_sge sg;
+    struct ibv_send_wr wr;
+    struct ibv_send_wr *bad_wr;
+    
+    //sg.addr	  = (uintptr_t)local_addr;  // have to cast to uintptr_t ?
+    sg.addr	  = local_addr;
+    sg.length = length;
+    sg.lkey	  = data_mr->lkey;
+    
+    memset(&wr, 0, sizeof(wr));
+    wr.wr_id      = 0;
+    wr.sg_list    = &sg;
+    wr.num_sge    = 1;
+    wr.opcode     = IBV_WR_RDMA_WRITE;
+    wr.send_flags = IBV_SEND_SIGNALED;
+    wr.wr.rdma.remote_addr = remote_addr;
+    wr.wr.rdma.rkey        = remote_info.data_rkey;
+    
+    assert_exit(ibv_post_send(qp, &wr, &bad_wr) == 0, "Error post sr with RDMA WRITE.");
 }
 
 }

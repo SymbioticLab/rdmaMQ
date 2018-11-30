@@ -39,7 +39,7 @@ private:
     std::unique_ptr<Transport> transport;
     std::string broker_ip;
 
-    void fetch_and_add_write_addr(size_t num_msg);
+    size_t fetch_and_add_write_addr(size_t start_idx, size_t num_msg);
 
 public:
     Producer() {}
@@ -59,6 +59,7 @@ public:
     // start_idx: indicates the starting address of the data in the buffer pushed to the broker
     // num_msg: # of data blocks to send in a batch
     // e.g., push(0, 2) pushes the first 2 elements in the buffer to the broker
+    // returns num_msg actually written
     size_t push(size_t start_idx, size_t num_msg);
 
 };

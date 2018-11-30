@@ -87,18 +87,20 @@ public:
     void init(const char *server_addr, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx = -1);
 
     // poll wc from cq
-    void poll_from_cq(size_t num_entries);
+    void poll_from_cq(int num_entries);
     
     // post a send request using ATOMIC_FETCH_AND_ADD
-    // Note: value read is put in ctrl_mr
+    // used by Producer to get write addr from the broker
+    // value read is put in ctrl_mr
     void post_ATOMIC_FA(uint64_t compare_add);
 
     // post a send request using RDMA_WRITE_WITH_IMM
-    // Note: uses data_mr
-    void post_WRITE_IMM();
+    // uses data_mr
+    // local_addr specifies sge.addr in local buffer,
+    void post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote_addr);
 
     // post a send request using RMDA_READ
-    // Note: uses data_mr
+    // uses data_mr
     void post_READ();
 
 };
