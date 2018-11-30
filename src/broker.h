@@ -1,5 +1,5 @@
-#ifndef PRODUCER_H_
-#define PRODUCER_H_
+#ifndef BROKER_H_
+#define BROKER_H_
 
 #include "mbuf.h"
 #include "transport.h"
@@ -22,8 +22,8 @@ namespace rmq {
  * 
  * 
  * Usage:
- *      First call Broker custom constructor.
- *      Then construct data_buf and ctrl_buf.
+ *      First call Broker custom constructor,
+ *      which constructs data_buf and ctrl_buf.
  *      Then call Broker::init_transport() to complete the setup.
  */
 
@@ -37,7 +37,7 @@ private:
 public:
     Broker() {
         transport = std::make_unique<Transport>();
-        data_buf = std::make_unique<MessageBuffer<T>>(data_buf_cap, transport->get_pd());
+        data_buf = std::make_unique<MessageBuffer<T>>(bkr_buff_cap, transport->get_pd());
         ctrl_buf = std::make_unique<MessageBuffer<uint64_t>>(1, transport->get_pd(), 1);
     }
     ~Broker() {}
@@ -45,7 +45,7 @@ public:
     // gets called after constructing mbuf
     void init_transport(int gid_idx) {
         // initialize ctrl_buf (which contains loop_cnt and write_idx)
-        ctrl_buf.get_data() = 0;
+        memset(ctrl_buf->get_data(), 0, ctrl_buf->get_block_size());
 
         transport->init(data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
@@ -58,4 +58,4 @@ public:
 }
 
 
-#endif // PRODUCER_H_
+#endif // BROKER_H_

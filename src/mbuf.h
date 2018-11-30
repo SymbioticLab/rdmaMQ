@@ -57,6 +57,7 @@ public:
     inline T *get_data() { return data; }   // TODO: check if this is exact what mr->data
     inline struct ibv_mr* get_mr() { return mr; }
     inline size_t get_capacity() { return capacity; }
+    inline size_t get_block_size() { return block_size; }
 
 };
 
