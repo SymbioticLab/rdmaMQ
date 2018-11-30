@@ -42,11 +42,12 @@ public:
     }
     ~Broker() {}
 
-    // gets called after constrcut mbuf
+    // gets called after constructing mbuf
     void init_transport(int gid_idx) {
-        transport->init(data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
         // initialize ctrl_buf (which contains loop_cnt and write_idx)
         ctrl_buf.get_data() = 0;
+
+        transport->init(data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
 };
