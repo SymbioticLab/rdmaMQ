@@ -10,9 +10,15 @@ template <typename T>
 // # of bits depends on bkr_x defined in config_rmq.h
 // Assumes num_msg is never 0
 // TODO: keep track of network/host order later
-size_t Producer<T>::fetch_and_add_write_addr(size_t start_idx, size_t num_msg) {
-    if (unlikely(data_buf->get_capacity() - start_idx < num_msg)) {
+size_t Producer<T>::fetch_and_add_write_idx(size_t start_idx, size_t num_msg) {
+    // First local buffer overflow check
+    if (unlikely(num_msg > data_buf->get_capacity() - start_idx)) {
         num_msg = data_buf->get_capacity() - start_idx;
+    }
+
+    // Then check remote buffer(circular) overflow 
+    if (unlikely(num_msg > bkr_buff_cap - (ctrl_buf->get_data()[0] & bkr_low_mask))) {
+        num_msg = bkr_buff_cap - (ctrl_buf->get_data()[0] & bkr_low_mask);
     }
 
     uint64_t compare_add = num_msg;
@@ -26,9 +32,12 @@ size_t Producer<T>::fetch_and_add_write_addr(size_t start_idx, size_t num_msg) {
 
 template <typename T>
 size_t Producer<T>::push(size_t start_idx, size_t num_msg) {
+    // basic checks
     assert_exit(start_idx <= data_buf->get_capacity(), "Error: Invalid start_idx (greater than capacity).");
     assert_exit(num_msg > 0 && num_msg <= bkr_buff_cap, "Error: Invalid num_msg value");
-    num_msg = fetch_and_add_write_addr(num_msg);
+
+    // atomically get next_write_idx and set new idx at the broker
+    num_msg = fetch_and_add_write_idx(num_msg);
 
     uint64_t local_addr = start_idx * sizeof(T) + transport->local_info.data_vaddr;
     uint32_t length = num_msg * sizeof(T);

@@ -26,8 +26,8 @@ namespace rmq {
  * or brokers. Which broker to push to is decided when constructing Producer.
  * 
  * Usage:
- *      First call Producer custom constructor.
- *      Then construct data_buf and ctrl_buf.
+ *      First call Producer custom constructor,
+ *      which constructs data_buf and ctrl_buf.
  *      Then call Producer::init_transport() to complete the setup.
  */
 
@@ -39,7 +39,7 @@ private:
     std::unique_ptr<Transport> transport;
     std::string broker_ip;
 
-    size_t fetch_and_add_write_addr(size_t start_idx, size_t num_msg);
+    size_t fetch_and_add_write_idx(size_t start_idx, size_t num_msg);
 
 public:
     Producer() {}
@@ -51,7 +51,7 @@ public:
     }
     ~Producer() {}
 
-    // gets called after constrcut mbuf
+    // gets called after constructing mbuf
     void init_transport(int gid_idx) {
         transport->init(broker_ip.c_str(), data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
