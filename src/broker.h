@@ -51,7 +51,7 @@ public:
     }
 
     // gets called after constructing mbuf
-    void init_transport(int gid_idx) {
+    void init_transport(int gid_idx = -1) {
         // initialize ctrl_buf (which contains loop_cnt and write_idx)
         memset(ctrl_buf->get_data(), 0, ctrl_buf->get_block_size());
 

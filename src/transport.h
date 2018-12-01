@@ -93,7 +93,7 @@ public:
     // init transport (between sender & receiver) after MessageBuffer is constructed
     // After init() returns, qp has transited to RTS.
     // qp_num : number of qps and (same) number of cqs/comp_channels (send_cq/recv_cq shared)
-    void init(const char *server_addr, size_t num_qp, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx = -1);
+    void init(const char *server_addr, size_t num_qp, struct ibv_mr *data_mr, struct ibv_mr *ctrl_mr, int gid_idx);
 
     // poll wc from cq
     void poll_from_cq(int num_entries, size_t qp_idx = 0);

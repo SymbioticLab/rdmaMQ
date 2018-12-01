@@ -52,7 +52,7 @@ public:
     ~Producer() {}
 
     // gets called after constructing mbuf
-    void init_transport(int gid_idx) {
+    void init_transport(int gid_idx = -1) {
         transport->init(broker_ip.c_str(), 1, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
