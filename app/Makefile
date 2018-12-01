@@ -6,7 +6,7 @@ LDLIBS := -lpthread -lrt -libverbs -lm
 
 RMQ_HOME := ../src
 
-OBJS := $(RMQ_HOME)/main.o $(RMQ_HOME)/mbuf.o $(RMQ_HOME)/transport.o \
+OBJS := main.o $(RMQ_HOME)/mbuf.o $(RMQ_HOME)/transport.o \
 	$(RMQ_HOME)/producer.o $(RMQ_HOME)/broker.o $(RMQ_HOME)/consumer.o
 
 APPS := main
