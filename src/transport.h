@@ -110,7 +110,7 @@ public:
 
     // post a send request using RMDA_READ
     // uses data_mr
-    void post_READ();
+    void post_READ(uint64_t local_addr, uint32_t length, uint64_t remote_addr, size_t qp_idx = 0);
 
 };
 

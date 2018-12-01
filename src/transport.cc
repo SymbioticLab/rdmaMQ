@@ -372,12 +372,12 @@ void Transport::post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote
     struct ibv_sge sg;
     struct ibv_send_wr wr;
     struct ibv_send_wr *bad_wr;
-    
+
     //sg.addr	  = (uintptr_t)local_addr;  // have to cast to uintptr_t ?
     sg.addr	  = local_addr;
     sg.length = length;
     sg.lkey	  = data_mr->lkey;
-    
+
     memset(&wr, 0, sizeof(wr));
     wr.wr_id      = 0;
     wr.sg_list    = &sg;
@@ -386,7 +386,29 @@ void Transport::post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote
     wr.send_flags = IBV_SEND_SIGNALED;
     wr.wr.rdma.remote_addr = remote_addr;
     wr.wr.rdma.rkey        = remote_info[qp_idx].data_rkey;
-    
+
+    assert_exit(ibv_post_send(qp[qp_idx], &wr, &bad_wr) == 0, "Error post sr with RDMA WRITE.");
+}
+
+void Transport::post_READ(uint64_t local_addr, uint32_t length, uint64_t remote_addr, size_t qp_idx) {
+    struct ibv_sge sg;
+    struct ibv_send_wr wr;
+    struct ibv_send_wr *bad_wr;
+
+    //sg.addr	  = (uintptr_t)local_addr;  // have to cast to uintptr_t ?
+    sg.addr	  = local_addr;
+    sg.length = length;
+    sg.lkey	  = data_mr->lkey;
+
+    memset(&wr, 0, sizeof(wr));
+    wr.wr_id      = 0;
+    wr.sg_list    = &sg;
+    wr.num_sge    = 1;
+    wr.opcode     = IBV_WR_RDMA_READ;
+    wr.send_flags = IBV_SEND_SIGNALED;
+    wr.wr.rdma.remote_addr = remote_addr;
+    wr.wr.rdma.rkey        = remote_info[qp_idx].data_rkey;
+
     assert_exit(ibv_post_send(qp[qp_idx], &wr, &bad_wr) == 0, "Error post sr with RDMA WRITE.");
 }
 
