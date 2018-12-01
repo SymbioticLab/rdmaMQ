@@ -4,6 +4,7 @@
 #include "transport.h"
 #include "producer.h"
 #include "broker.h"
+#include "consumer.h"
 
 int main() {
 	//auto transport = std::make_shared<rmq::Transport>();

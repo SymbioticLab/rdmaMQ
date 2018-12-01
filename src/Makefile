@@ -25,5 +25,8 @@ producer.o:
 broker.o:
 	$(CC) $(CPPFLAGS) -c broker.cc
 
+consumer.o:
+	$(CC) $(CPPFLAGS) -c consumer.cc
+
 clean:
 	rm -f *.o ${APPS}

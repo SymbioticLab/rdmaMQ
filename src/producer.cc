@@ -3,7 +3,6 @@
 
 namespace rmq {
 
-
 template <typename T>
 // loop_cnt is the higher portion of the uint64_t
 // write_idx is the lower portion of the uint64_t

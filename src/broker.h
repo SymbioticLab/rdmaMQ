@@ -28,7 +28,6 @@ namespace rmq {
  *      Then construct Producer and call Producer::init_transport().
  *      Then construct Consumer and call Consumer::init_transport().
  * 
- *      User should let Producer first connect, then Consumer.
  *      TODO: better cluster initalization mechanism.
  */
 
