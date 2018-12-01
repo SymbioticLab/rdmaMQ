@@ -1,13 +1,12 @@
 CXX := g++
 LD := $(CXX)
-CPPFLAGS := -std=c++14 -g -Wall
-#CPPFLAGS := -std=c++14 -O3 -Wall
+RMQ_SRC := ../src
+CPPFLAGS := -std=c++14 -g -Wall -I$(RMQ_SRC)
+#CPPFLAGS := -std=c++14 -O3 -Wall -I$(RMQ_SRC)
 LDLIBS := -lpthread -lrt -libverbs -lm
 
-RMQ_HOME := ../src
-
-OBJS := main.o $(RMQ_HOME)/mbuf.o $(RMQ_HOME)/transport.o \
-	$(RMQ_HOME)/producer.o $(RMQ_HOME)/broker.o $(RMQ_HOME)/consumer.o
+OBJS := main.o $(RMQ_SRC)/mbuf.o $(RMQ_SRC)/transport.o \
+	$(RMQ_SRC)/producer.o $(RMQ_SRC)/broker.o $(RMQ_SRC)/consumer.o
 
 APPS := main
 
