@@ -52,6 +52,7 @@ public:
     ~MessageBuffer() {
         assert_exit(ibv_dereg_mr(mr) == 0, "Error deregister mr.");
         delete[] data;
+        printf("mbuf destructor gets called\n");
     }
 
     inline T *get_data() { return data; }   // TODO: check if this is exact what mr->data

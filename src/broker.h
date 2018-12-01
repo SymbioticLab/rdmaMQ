@@ -51,11 +51,14 @@ public:
     }
 
     // gets called after constructing mbuf
+    // TODO: add num_qp arg in init_transport()
     void init_transport(int gid_idx = -1) {
         // initialize ctrl_buf (which contains loop_cnt and write_idx)
         memset(ctrl_buf->get_data(), 0, ctrl_buf->get_block_size());
 
-        transport->init(nullptr, 2, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
+        //// For testing, change num_qp to 1 for now.
+        transport->init(nullptr, 1, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
+        //transport->init(nullptr, 2, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
 };

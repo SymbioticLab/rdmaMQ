@@ -279,7 +279,7 @@ void Transport::hand_shake_server(size_t qp_idx) {
 
     freeaddrinfo(res);
     free(service);
-    assert_exit(sockfd == 0, "Error binding via socket.");
+    assert_exit(sockfd >= 0, "Error binding via socket.");
 
     listen(sockfd, 1);
     connfd = accept(sockfd, NULL, 0);
