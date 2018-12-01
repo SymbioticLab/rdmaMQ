@@ -3,7 +3,11 @@ LD := $(CXX)
 CPPFLAGS := -std=c++14 -g -Wall
 #CPPFLAGS := -std=c++14 -O3 -Wall
 LDLIBS := -lpthread -lrt -libverbs -lm
-OBJS := mbuf.o transport.o producer.o broker.o consumer.o main.o 
+
+RMQ_HOME := ../src
+
+OBJS := $(RMQ_HOME)/main.o $(RMQ_HOME)/mbuf.o $(RMQ_HOME)/transport.o \
+	$(RMQ_HOME)/producer.o $(RMQ_HOME)/broker.o $(RMQ_HOME)/consumer.o
 
 APPS := main
 
