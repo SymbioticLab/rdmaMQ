@@ -164,11 +164,11 @@ void Transport::modify_qp_to_RTR(uint8_t sl) {
         attr.ah_attr.src_path_bits  = 0;
         attr.ah_attr.port_num       = tr_phy_port_num;
 
-        LOG_DEBUG("Modify_to_RTR: dest_qp_num: %06x\n", attr.dest_qp_num);
-        LOG_DEBUG("Modify_to_RTR: local psn(sq_psn): %06x\n", local_info[i].psn);
-        LOG_DEBUG("Modify_to_RTR: rq_psn: %06x\n", attr.rq_psn);
-        LOG_DEBUG("Modify_to_RTR: dlid: %04x\n", attr.ah_attr.dlid);
-        LOG_DEBUG("Modify_to_RTR: sl: %d\n", attr.ah_attr.sl);
+        //LOG_DEBUG("Modify_to_RTR: dest_qp_num: %06x\n", attr.dest_qp_num);
+        //LOG_DEBUG("Modify_to_RTR: local psn(sq_psn): %06x\n", local_info[i].psn);
+        //LOG_DEBUG("Modify_to_RTR: rq_psn: %06x\n", attr.rq_psn);
+        //LOG_DEBUG("Modify_to_RTR: dlid: %04x\n", attr.ah_attr.dlid);
+
         // check for RoCE
         if (remote_info[i].gid.global.interface_id) {
             LOG_DEBUG("Setting attr.ah_attr for RoCE.\n");
