@@ -12,12 +12,12 @@ namespace rmq {
 enum ibv_mtu get_ibv_mtu(int mtu) {
     enum ibv_mtu ib_mtu;
 	switch (mtu) {
-        case 256:  ib_mtu = IBV_MTU_256;
-        case 512:  ib_mtu = IBV_MTU_512;
-        case 1024: ib_mtu = IBV_MTU_1024;
-        case 2048: ib_mtu = IBV_MTU_2048;
-        case 4096: ib_mtu = IBV_MTU_4096;
-        default:   assert_exit(false, "Invalid MTU value");
+        case 256:  ib_mtu = IBV_MTU_256; break;
+        case 512:  ib_mtu = IBV_MTU_512; break;
+        case 1024: ib_mtu = IBV_MTU_1024; break;
+        case 2048: ib_mtu = IBV_MTU_2048; break;
+        case 4096: ib_mtu = IBV_MTU_4096; break;
+        default:   assert_exit(false, "Invalid MTU value: " + std::to_string(mtu));
 	}
     return ib_mtu;
 }
@@ -219,8 +219,6 @@ void Transport::hand_shake_client(size_t qp_idx, const char * server_addr) {
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = 0;
-    //assert_exit(getaddrinfo(server_addr, service, &hints, &res) == 0,
-    //            "Error getting address info of server: " + std::string(strerror(errno)) + ".");
     int s = getaddrinfo(server_addr, service, &hints, &res); 
     assert_exit(s == 0, "ERROR: getting address info of server: " + std::string(gai_strerror(s)) + ".");
 
@@ -269,8 +267,6 @@ void Transport::hand_shake_server(size_t qp_idx) {
     hints.ai_flags = AI_PASSIVE;
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    //assert_exit(getaddrinfo(nullptr, service, &hints, &res) == 0,
-    //            "Error getting address info of server: " + std::string(strerror(errno)) + ".");
     int s = getaddrinfo(nullptr, service, &hints, &res); 
     assert_exit(s == 0, "ERROR: getting address info of server: " + std::string(gai_strerror(s)) + ".");
 
