@@ -4,6 +4,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <iostream>
 
 namespace rmq {
 
@@ -217,7 +218,11 @@ void Transport::hand_shake_client(size_t qp_idx, const char * server_addr) {
 
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    assert_exit(getaddrinfo(server_addr, service, &hints, &res) == 0, "Error getting address info of server.");
+    hints.ai_flags = 0;
+    //assert_exit(getaddrinfo(server_addr, service, &hints, &res) == 0,
+    //            "Error getting address info of server: " + std::string(strerror(errno)) + ".");
+    int s = getaddrinfo(server_addr, service, &hints, &res); 
+    assert_exit(s == 0, "ERROR: getting address info of server: " + std::string(gai_strerror(s)) + ".");
 
     for (t = res; t; t = t->ai_next) {
         sockfd = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
@@ -231,7 +236,7 @@ void Transport::hand_shake_client(size_t qp_idx, const char * server_addr) {
 
     freeaddrinfo(res);
     free(service);
-    assert_exit(sockfd == 0, "Error connecting to server via socket.");
+    assert_exit(sockfd >= 0, "Couldn't connect to server via socket.");
 
     gid_to_wire_gid(&local_info[qp_idx].gid, gid);
     sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", local_info[qp_idx].lid, local_info[qp_idx].qpn,
@@ -264,7 +269,10 @@ void Transport::hand_shake_server(size_t qp_idx) {
     hints.ai_flags = AI_PASSIVE;
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    assert_exit(getaddrinfo(nullptr, service, &hints, &res) == 0, "Error getting address info of server.");
+    //assert_exit(getaddrinfo(nullptr, service, &hints, &res) == 0,
+    //            "Error getting address info of server: " + std::string(strerror(errno)) + ".");
+    int s = getaddrinfo(nullptr, service, &hints, &res); 
+    assert_exit(s == 0, "ERROR: getting address info of server: " + std::string(gai_strerror(s)) + ".");
 
     for (t = res; t; t = t->ai_next) {
         sockfd = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
@@ -284,9 +292,12 @@ void Transport::hand_shake_server(size_t qp_idx) {
     listen(sockfd, 1);
     connfd = accept(sockfd, NULL, 0);
     close(sockfd);
-    assert_exit(connfd >= 0, "Error accepting conn from client via socket.");
+    assert_exit(connfd >= 0, "Error accepting conn from client via socket: " +
+                std::string(strerror(errno)) + ".");
     
-    assert_exit(recv(connfd, msg, sizeof(msg), MSG_WAITALL) == sizeof(msg),
+    int byte_recved = recv(connfd, msg, sizeof(msg), MSG_WAITALL);
+    LOG_DEBUG("In hand_shake_server: Byte_recved = %d\n", byte_recved);
+    assert_exit(byte_recved == sizeof(msg),
                 "Error recving remote node info: " + std::string(strerror(errno)) + ".");
 
     sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &remote_info[qp_idx].lid, &remote_info[qp_idx].qpn,
