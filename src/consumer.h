@@ -1,5 +1,5 @@
-#ifndef PRODUCER_H_
-#define PRODUCER_H_
+#ifndef CONSUMER_H_
+#define CONSUMER_H_
 
 #include "mbuf.h"
 #include "transport.h"
@@ -81,4 +81,4 @@ public:
 }
 
 
-#endif // PRODUCER_H_
+#endif // CONSUMER_H_
