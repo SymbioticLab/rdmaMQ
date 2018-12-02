@@ -13,7 +13,7 @@ namespace rmq {
 // a small struct which holds the remote node info to establish RDMA conn
 // assume a data mr and a control mr for now
 struct dest_info {
-    uint16_t lid;
+    uint32_t lid;
     uint32_t qpn;
     uint32_t psn;
     int gid_idx;

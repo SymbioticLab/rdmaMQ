@@ -102,7 +102,8 @@ void Transport::init_local_info(int gid_idx) {
 
         local_info[i].lid = port_attr.lid;
         local_info[i].qpn = qp[i]->qp_num;
-        local_info[i].psn = lrand48() & 0xffffff;
+        //local_info[i].psn = lrand48() & 0xffffff;
+        local_info[i].psn = 8300 + i;
         local_info[i].data_rkey = data_mr->rkey;
         local_info[i].data_vaddr = reinterpret_cast<uintptr_t>(data_mr->addr);
         local_info[i].ctrl_rkey = ctrl_mr->rkey;
@@ -111,6 +112,8 @@ void Transport::init_local_info(int gid_idx) {
 
         if (gid_idx >= 0) {
             assert_exit(ibv_query_gid(pd->context, tr_phy_port_num, gid_idx, &local_info[i].gid) == 0, "Failed to query local gid.");
+        } else {
+            memset(&local_info[i].gid, 0, sizeof(local_info[i].gid));
         }
     }
 }
@@ -149,10 +152,11 @@ void Transport::modify_qp_to_RTR(uint8_t sl) {
 
         memset(&attr, 0, sizeof(attr));
         attr.qp_state               = IBV_QPS_RTR;
-        attr.path_mtu               = get_ibv_mtu(tr_path_mtu);
+        //attr.path_mtu               = get_ibv_mtu(tr_path_mtu);
+        attr.path_mtu               = IBV_MTU_2048;
         attr.dest_qp_num            = remote_info[i].qpn;
         attr.rq_psn                 = remote_info[i].psn;
-        attr.max_dest_rd_atomic     = 1;
+        attr.max_dest_rd_atomic     = 1;                    // TODO: MORE ON THIS LATER
         attr.min_rnr_timer          = 12;
         attr.ah_attr.is_global      = 0;
         attr.ah_attr.dlid           = remote_info[i].lid;
@@ -160,8 +164,14 @@ void Transport::modify_qp_to_RTR(uint8_t sl) {
         attr.ah_attr.src_path_bits  = 0;
         attr.ah_attr.port_num       = tr_phy_port_num;
 
+        LOG_DEBUG("Modify_to_RTR: dest_qp_num: %06x\n", attr.dest_qp_num);
+        LOG_DEBUG("Modify_to_RTR: local psn(sq_psn): %06x\n", local_info[i].psn);
+        LOG_DEBUG("Modify_to_RTR: rq_psn: %06x\n", attr.rq_psn);
+        LOG_DEBUG("Modify_to_RTR: dlid: %04x\n", attr.ah_attr.dlid);
+        LOG_DEBUG("Modify_to_RTR: sl: %d\n", attr.ah_attr.sl);
         // check for RoCE
         if (remote_info[i].gid.global.interface_id) {
+            LOG_DEBUG("Setting attr.ah_attr for RoCE.\n");
             attr.ah_attr.is_global = 1;
             attr.ah_attr.grh.hop_limit = 1;
             attr.ah_attr.grh.dgid = remote_info[i].gid;
@@ -240,6 +250,9 @@ void Transport::hand_shake_client(size_t qp_idx, const char * server_addr) {
     sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", local_info[qp_idx].lid, local_info[qp_idx].qpn,
                 local_info[qp_idx].psn, local_info[qp_idx].data_rkey, local_info[qp_idx].data_vaddr,
                 local_info[qp_idx].ctrl_rkey, local_info[qp_idx].ctrl_vaddr, gid);
+    LOG_DEBUG("hand_shake_client SEND_MSG: %04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s\n", local_info[qp_idx].lid, local_info[qp_idx].qpn,
+                local_info[qp_idx].psn, local_info[qp_idx].data_rkey, local_info[qp_idx].data_vaddr,
+                local_info[qp_idx].ctrl_rkey, local_info[qp_idx].ctrl_vaddr, gid);
 
     assert_exit(write(sockfd, msg, sizeof(msg)) == sizeof(msg), "Error sending local node info.");
 
@@ -248,9 +261,12 @@ void Transport::hand_shake_client(size_t qp_idx, const char * server_addr) {
 
     assert_exit(write(sockfd, "done", sizeof("done")) == sizeof("done"), "Error sending done message");
 
-    sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &remote_info[qp_idx].lid, &remote_info[qp_idx].qpn,
+    sscanf(msg, "%x:%x:%x:%x:%lx:%x:%lx:%s", &remote_info[qp_idx].lid, &remote_info[qp_idx].qpn,
                 &remote_info[qp_idx].psn, &remote_info[qp_idx].data_rkey, &remote_info[qp_idx].data_vaddr,
                 &remote_info[qp_idx].ctrl_rkey, &remote_info[qp_idx].ctrl_vaddr, gid);
+    LOG_DEBUG("hand_shake_client RECV_MSG: %04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s\n", remote_info[qp_idx].lid, remote_info[qp_idx].qpn,
+                remote_info[qp_idx].psn, remote_info[qp_idx].data_rkey, remote_info[qp_idx].data_vaddr,
+                remote_info[qp_idx].ctrl_rkey, remote_info[qp_idx].ctrl_vaddr, gid);
     wire_gid_to_gid(gid, &remote_info[qp_idx].gid);
     LOG_DEBUG("Client hand shake done.\n");
 }
@@ -296,13 +312,19 @@ void Transport::hand_shake_server(size_t qp_idx) {
     assert_exit(byte_recved == sizeof(msg),
                 "Error recving remote node info: " + std::string(strerror(errno)) + ".");
 
-    sscanf(msg, "%hu:%x:%x:%x:%lx:%x:%lx:%s", &remote_info[qp_idx].lid, &remote_info[qp_idx].qpn,
+    sscanf(msg, "%x:%x:%x:%x:%lx:%x:%lx:%s", &remote_info[qp_idx].lid, &remote_info[qp_idx].qpn,
                 &remote_info[qp_idx].psn, &remote_info[qp_idx].data_rkey, &remote_info[qp_idx].data_vaddr,
                 &remote_info[qp_idx].ctrl_rkey, &remote_info[qp_idx].ctrl_vaddr, gid);
+    LOG_DEBUG("hand_shake_server RECV_MSG: %04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s\n", remote_info[qp_idx].lid, remote_info[qp_idx].qpn,
+                remote_info[qp_idx].psn, remote_info[qp_idx].data_rkey, remote_info[qp_idx].data_vaddr,
+                remote_info[qp_idx].ctrl_rkey, remote_info[qp_idx].ctrl_vaddr, gid);
     wire_gid_to_gid(gid, &remote_info[qp_idx].gid);
 
     gid_to_wire_gid(&local_info[qp_idx].gid, gid);
     sprintf(msg, "%04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s", local_info[qp_idx].lid, local_info[qp_idx].qpn,
+                local_info[qp_idx].psn, local_info[qp_idx].data_rkey, local_info[qp_idx].data_vaddr,
+                local_info[qp_idx].ctrl_rkey, local_info[qp_idx].ctrl_vaddr, gid);
+    LOG_DEBUG("hand_shake_server SEND_MSG: %04x:%06x:%06x:%08x:%016lx:%08x:%016lx:%s\n", local_info[qp_idx].lid, local_info[qp_idx].qpn,
                 local_info[qp_idx].psn, local_info[qp_idx].data_rkey, local_info[qp_idx].data_vaddr,
                 local_info[qp_idx].ctrl_rkey, local_info[qp_idx].ctrl_vaddr, gid);
     assert_exit(write(connfd, msg, sizeof(msg)) == sizeof(msg), "Error sending local node info.");
@@ -322,10 +344,10 @@ void Transport::init(const char *server_addr, size_t num_qp, struct ibv_mr *data
     local_info = new struct dest_info[num_qp];
     remote_info = new struct dest_info[num_qp];
 
-    init_local_info(gid_idx);
-
     create_cq();
     create_qp();
+
+    init_local_info(gid_idx);
     
     modify_qp_to_INIT();
 
