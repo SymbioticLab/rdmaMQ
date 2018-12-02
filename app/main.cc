@@ -12,7 +12,7 @@ void run_producer() {
     producer->init_transport();
     for (int i = 0; i < 1000; i++) {
         producer->data()[0] = i;
-        producer->push()
+        producer->push(i, 1);       // why link error?
     }
 }
 
