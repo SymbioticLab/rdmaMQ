@@ -42,6 +42,7 @@ private:
     std::string broker_ip;
 
     // assume only one topic
+    // TODO: move this to public and return idx to users
     void fetch_write_idx();
 
 public:
@@ -66,6 +67,10 @@ public:
     // of the local buffer
     // returns num_msg actually read
     size_t pull(size_t start_idx, size_t read_idx, size_t num_msg);
+
+    inline T *data() {
+        return data_buf->get_data();
+    }
 
 };
 

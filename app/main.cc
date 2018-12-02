@@ -10,6 +10,10 @@ void run_producer() {
     std::cout << "Running as Producer" << std::endl;
     auto producer = new rmq::Producer<int>(1000, "10.0.0.2");
     producer->init_transport();
+    for (int i = 0; i < 1000; i++) {
+        producer->data()[0] = i;
+        producer->push()
+    }
 }
 
 void run_consumer() {
