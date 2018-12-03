@@ -18,8 +18,9 @@
 
 namespace rmq {
 
-#define DEBUG_MODE 1
-#define INFO_MODE 1
+#define DEBUG_MODE
+#define INFO_MODE
+#define MEASURE_LAT
 
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
@@ -34,13 +35,13 @@ namespace rmq {
 #ifdef DEBUG_MODE
 #define LOG_DEBUG(...) do { fprintf(stderr, __VA_ARGS__); } while (0)
 #else
-#define LOG_DEBUG(x)
+#define LOG_DEBUG(...)
 #endif
 
 #ifdef INFO_MODE
 #define LOG_INFO(...) do { fprintf(stderr, __VA_ARGS__); } while (0)
 #else
-#define LOG_INFO(x)
+#define LOG_INFO(...)
 #endif
 
 inline void assert_exit(bool condition, std::string error_msg) {
