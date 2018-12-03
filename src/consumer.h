@@ -41,10 +41,6 @@ private:
     std::unique_ptr<Transport> transport;
     std::string broker_ip;
 
-    // assume only one topic
-    // TODO: move this to public and return idx to users
-    void fetch_write_idx();
-
 public:
     Consumer() {}
     Consumer(size_t data_buf_cap, std::string broker_ip)
@@ -62,10 +58,14 @@ public:
         transport->init(broker_ip.c_str(), 1, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
+    // assume only one topic
+    // TODO: move this to public and return idx to users
+    void fetch_write_idx();
+
     // start_idx: indicates the starting address of the data in the buffer pulled from the broker
     // read idx: indicates where in the remote broker buffer will the read start from
     // num_msg: # of data blocks to read in a batch
-    // e.g., push(0, 0, 2) pushes the first 2 elements in the broker buffer to the first 2 elements
+    // e.g., pull(0, 0, 2) pushes the first 2 elements in the broker buffer to the first 2 elements
     // of the local buffer
     // returns num_msg actually read
     size_t pull(size_t start_idx, size_t read_idx, size_t num_msg);

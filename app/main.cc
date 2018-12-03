@@ -22,6 +22,13 @@ void run_producer() {
 
 void run_consumer() {
     std::cout << "Running as Consumer" << std::endl;
+    auto consumer = new rmq::Consumer<int>(1000, "10.0.0.2");
+    consumer->init_transport();
+    consumer->fetch_write_idx();
+    for (int i = 0; i < 100; i++) {
+        consumer->pull(i, i, 1);
+        std::cout << "Data read: " << consumer->data()[i] << std::endl;
+    }
     while(1) {}
 }
 

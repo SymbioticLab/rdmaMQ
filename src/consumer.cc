@@ -39,13 +39,19 @@ size_t Consumer<T>::pull(size_t start_idx, size_t read_idx, size_t num_msg) {
         num_msg = bkr_buff_cap - read_idx;
     }
 
-    uint64_t local_addr = start_idx * sizeof(T) + transport->local_info[0].data_vaddr;
+    uint64_t local_addr = start_idx * sizeof(T) + transport->get_local_info()[0].data_vaddr;
     uint32_t length = num_msg * sizeof(T);
-    uint64_t remote_addr = read_idx * sizeof(T) + transport->remote_info[0].data_vaddr;
+    uint64_t remote_addr = read_idx * sizeof(T) + transport->get_remote_info()[0].data_vaddr;
     transport->post_READ(local_addr, length, remote_addr);
 
     transport->poll_from_cq(1);
     return num_msg;
 }
+
+// explicit instantiations
+template class Consumer<char>;
+template class Consumer<int>;
+template class Consumer<uint64_t>;
+template class Consumer<std::string>;
 
 }
