@@ -22,7 +22,7 @@ class MessageBuffer {
 private:
     // Basic info
     size_t capacity;                // maximum number of data blocks
-    size_t num_blocks;              // current number of data blocks
+    size_t num_blocks;              // current number of data blocks: NOT USED for now
     size_t block_size;              // size of a data block in bytes
     size_t total_size;              // size of data capacity in bytes
     //std::unique_ptr<T[]> data;      // fixed sized array
@@ -52,13 +52,15 @@ public:
     ~MessageBuffer() {
         assert_exit(ibv_dereg_mr(mr) == 0, "Error deregister mr.");
         delete[] data;
-        printf("mbuf destructor gets called\n");
+        std::cout << "@@@@@@ mbuf destructor gets called\n" << std::endl;
     }
 
-    inline T *get_data() { return data; }   // TODO: check if this is exact what mr->data
+    inline T *get_data() { return data; }   // check if this is exact what mr->addr
+    //inline T *get_data() { return (T*)mr->addr; }   // ^^ Actually same thing
     inline struct ibv_mr* get_mr() { return mr; }
     inline size_t get_capacity() { return capacity; }
     inline size_t get_block_size() { return block_size; }
+    inline size_t get_total_size() { return total_size; }
 
 };
 
