@@ -49,7 +49,9 @@ public:
         data_buf = std::make_unique<MessageBuffer<T>>(data_buf_cap, transport->get_pd());
         ctrl_buf = std::make_unique<MessageBuffer<uint64_t>>(1, transport->get_pd(), 1);
     }
-    ~Producer() {}
+    ~Producer() {
+        std::cout << "@@@@@@ producer destructor gets called\n" << std::endl;
+    }
 
     // gets called after constructing mbuf
     void init_transport(int gid_idx = -1) {
@@ -65,6 +67,11 @@ public:
     inline T *data() {
         return data_buf->get_data();
     }
+
+    inline uint64_t *ctrl() {
+        return ctrl_buf->get_data();
+    }
+
 };
 
 

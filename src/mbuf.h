@@ -61,6 +61,7 @@ public:
     inline size_t get_capacity() { return capacity; }
     inline size_t get_block_size() { return block_size; }
     inline size_t get_total_size() { return total_size; }
+    inline size_t get_num_blocks() { return num_blocks; }
 
 };
 

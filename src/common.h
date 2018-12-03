@@ -6,13 +6,14 @@
  */
 
 #include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
 #include <memory>
 #include <string>
 #include <string.h>
-#include <vector>
+//#include <vector>
 #include "config_rmq.h"
 
 namespace rmq {

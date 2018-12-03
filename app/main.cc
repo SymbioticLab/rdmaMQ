@@ -10,10 +10,12 @@ void run_producer() {
     std::cout << "Running as Producer" << std::endl;
     auto producer = new rmq::Producer<int>(1000, "10.0.0.2");
     producer->init_transport();
-    for (int i = 0; i < 1000; i++) {
-        producer->data()[0] = i;
-        producer->push(i, 1);       // why link error?
+    for (int i = 0; i < 100; i++) {
+        producer->data()[i] = i;
+        producer->push(i, 1);
+        std::cout << "Data: " << producer->data()[i] << std::endl;
     }
+    //while(1) {}
 }
 
 void run_consumer() {
@@ -24,6 +26,9 @@ void run_broker() {
     std::cout << "Running as Broker" << std::endl;
     auto broker = new rmq::Broker<int>();
     broker->init_transport();
+    while (1) {
+        //std::cout << broker->ctrl()[0] << std::endl;
+    }        // can't return
 }
 
 int main(int argc, char **argv) {
