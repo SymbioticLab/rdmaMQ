@@ -40,17 +40,20 @@ void report_perf() {
 
 void run_producer() {
     std::cout << "Running as Producer" << std::endl;
-    init_lat_array();
+    ////init_lat_array();
     auto producer = new rmq::Producer<int>(1000, "10.0.0.2");
     producer->init_transport();
     for (size_t i = 0; i < NUM_REQ; i++) {
         producer->data()[i] = i;
-        start_cycles[i] = rmq::get_cycles();
+        ////start_cycles[i] = rmq::get_cycles();
         producer->push(i, 1);
-        end_cycles[i] = rmq::get_cycles();
+        ////end_cycles[i] = rmq::get_cycles();
         //std::cout << "Data: " << producer->data()[i] << std::endl;
     }
-    report_perf();
+    for (size_t i = 0; i < NUM_REQ; i++) {
+        producer->push(i, 1);
+    }
+    ////report_perf();
     //while(1) {}
 }
 
