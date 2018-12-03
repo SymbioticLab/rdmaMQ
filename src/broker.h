@@ -57,9 +57,10 @@ public:
         // initialize ctrl_buf (which contains loop_cnt and write_idx)
         memset(ctrl_buf->get_data(), 0, ctrl_buf->get_total_size());
 
-        //// For testing, change num_qp to 1 for now.
-        transport->init(nullptr, 1, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
-        //transport->init(nullptr, 2, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
+        //// For producer testing, change num_qp to 1 for now.
+        //// Full test should set to 2 to connect with consumer as well
+        //transport->init(nullptr, 1, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
+        transport->init(nullptr, 2, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
     inline T *data() {
