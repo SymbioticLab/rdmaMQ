@@ -1,8 +1,8 @@
 CXX := g++
 LD := $(CXX)
 RMQ_SRC := ../src
-CPPFLAGS := -std=c++14 -g -Wall -I$(RMQ_SRC)
-#CPPFLAGS := -std=c++14 -O3 -Wall -I$(RMQ_SRC)
+#CPPFLAGS := -std=c++14 -g -Wall -I$(RMQ_SRC)
+CPPFLAGS := -std=c++14 -O3 -Wall -I$(RMQ_SRC)
 LDLIBS := -lpthread -lrt -libverbs -lm
 
 OBJS := main.o $(RMQ_SRC)/mbuf.o $(RMQ_SRC)/transport.o \
