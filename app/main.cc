@@ -43,8 +43,8 @@ void run_broker() {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        std::cout << "Usage: ./main ROLE [BROKER_IP]" << std::endl;
-        std::cout << "ROLE -- 0: Producer; 1: Consumer; 2: Broker" << std::endl;
+        std::cout << "Usage: ./main ROLE [BROKER_IP]\n";
+        std::cout << "ROLE -- 0:Producer // 1:Consumer // 2:Broker\n";
         std::cout << "A Producer or Consumer must specify Broker IP" << std::endl;
         exit(1);
     }
@@ -54,13 +54,17 @@ int main(int argc, char **argv) {
 
     if (role == rmq::Role::rmq_Producer) {
         if (argc != 3) {
-            std::cout << "Usage: ./main ROLE [BROKER_IP]" << std::endl;
+            std::cout << "Usage: ./main ROLE [BROKER_IP]\n";
+            std::cout << "ROLE -- 0:Producer // 1:Consumer // 2:Broker\n";
+            std::cout << "A Producer or Consumer must specify Broker IP" << std::endl;
             exit(1);
         }
         run_producer();
     } else if (role == rmq::Role::rmq_Consumer) {
         if (argc != 3) {
-            std::cout << "Usage: ./main ROLE [BROKER_IP]" << std::endl;
+            std::cout << "Usage: ./main ROLE [BROKER_IP]\n";
+            std::cout << "ROLE -- 0:Producer // 1:Consumer // 2:Broker\n";
+            std::cout << "A Producer or Consumer must specify Broker IP" << std::endl;
             exit(1);
         }
         run_consumer();
