@@ -60,7 +60,7 @@ public:
 
     // assume only one topic
     // TODO: move this to public and return idx to users
-    void fetch_write_idx();
+    size_t fetch_write_idx();
 
     // start_idx: indicates the starting address of the data in the buffer pulled from the broker
     // read idx: indicates where in the remote broker buffer will the read start from

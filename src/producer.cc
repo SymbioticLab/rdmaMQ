@@ -6,9 +6,8 @@ namespace rmq {
 template <typename T>
 // loop_cnt is the higher portion of the uint64_t
 // write_idx is the lower portion of the uint64_t
-// # of bits depends on bkr_x defined in config_rmq.h
+// # of bits (of lower portion) depends on bkr_x defined in config_rmq.h
 // Assumes num_msg is never 0
-// TODO: keep track of network/host order later
 size_t Producer<T>::fetch_and_add_write_idx(size_t start_idx, size_t num_msg) {
     // First local buffer overflow check
     if (unlikely(num_msg > data_buf->get_capacity() - start_idx)) {
