@@ -78,7 +78,7 @@ public:
     Transport() { open_device_and_alloc_pd(); }
     //Transport(int is_server): is_server(is_server) { init(); };
     ~Transport() {
-        std::cout << "@@@@@@ transport destructor gets called\n" << std::endl;
+        LOG_DEBUG("Transport destructor gets called\n");
         delete[] local_info;
         delete[] remote_info;
         delete[] channel;

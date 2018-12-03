@@ -25,8 +25,10 @@ size_t Producer<T>::fetch_and_add_write_idx(size_t start_idx, size_t num_msg) {
 
     transport->poll_from_cq(1);
     // at this point remote write idx is read into ctrl_buf->data()[0]
+    // decimal version print
     LOG_DEBUG("getting WRITE IDX: %" PRIu64 "\n", ctrl_buf->get_data()[0] & bkr_low_mask);
     LOG_DEBUG("getting LOOP CNT: %" PRIu64 "\n", (ctrl_buf->get_data()[0] & bkr_high_mask) >> bkr_x);
+    // Hex version print
     //LOG_DEBUG("getting WRITE IDX: 0x%08lx\n", ctrl_buf->get_data()[0] & bkr_low_mask);
     //LOG_DEBUG("getting LOOP CNT: 0x%08lx\n", (uint64_t)((ctrl_buf->get_data()[0] & bkr_high_mask) >> bkr_x));
     return num_msg;

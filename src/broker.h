@@ -48,6 +48,7 @@ public:
     ~Broker() {
         delete data_buf;
         delete ctrl_buf;
+        LOG_DEBUG("Broker destructor gets called\n");
     }
 
     // gets called after constructing mbuf

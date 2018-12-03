@@ -50,7 +50,7 @@ public:
         ctrl_buf = std::make_unique<MessageBuffer<uint64_t>>(1, transport->get_pd(), 1);
     }
     ~Producer() {
-        std::cout << "@@@@@@ producer destructor gets called\n" << std::endl;
+        LOG_DEBUG("Producer destructor gets called\n");
     }
 
     // gets called after constructing mbuf

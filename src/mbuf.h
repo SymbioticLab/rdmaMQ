@@ -52,7 +52,7 @@ public:
     ~MessageBuffer() {
         assert_exit(ibv_dereg_mr(mr) == 0, "Error deregister mr.");
         delete[] data;
-        std::cout << "@@@@@@ mbuf destructor gets called\n" << std::endl;
+        LOG_DEBUG("MessageBuffer destructor gets called\n");
     }
 
     inline T *get_data() { return data; }   // check if this is exact what mr->addr

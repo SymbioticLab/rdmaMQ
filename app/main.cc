@@ -10,16 +10,19 @@ void run_producer() {
     std::cout << "Running as Producer" << std::endl;
     auto producer = new rmq::Producer<int>(1000, "10.0.0.2");
     producer->init_transport();
+    /*
     for (int i = 0; i < 100; i++) {
         producer->data()[i] = i;
         producer->push(i, 1);
-        std::cout << "Data: " << producer->data()[i] << std::endl;
+        //std::cout << "Data: " << producer->data()[i] << std::endl;
     }
-    //while(1) {}
+    */
+    while(1) {}
 }
 
 void run_consumer() {
     std::cout << "Running as Consumer" << std::endl;
+    while(1) {}
 }
 
 void run_broker() {
