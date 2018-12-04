@@ -22,25 +22,25 @@ namespace rmq {
  * 
  * 
  * Usage:
- *      Broker needs to connect with producer. and consumers.
- *      First call Broker custom constructor.
+ *      Say Broker wants to connect with M producer and N consumers.
+ *      First call Broker custom constructor Broker(M+N).
  *      Then call Broker::init_transport() to complete the setup.
- *      Then construct Producer and call Producer::init_transport().
- *      Then construct Consumer and call Consumer::init_transport().
+ *      Then construct Producers and call Producer::init_transport().
+ *      Then construct Consumers and call Consumer::init_transport().
  * 
- *      TODO: better cluster initalization mechanism.
  */
 
 template <typename T>
 class Broker {
 private:
     // For broker, mbuf is not unique (shared by at producers and consumers)
+    size_t num_conn;                        // # of connections to handle
     MessageBuffer<T> *data_buf;             // assume one buffer for now
     MessageBuffer<uint64_t> *ctrl_buf;      // store write_addr
     std::unique_ptr<Transport> transport;
 
 public:
-    Broker() {
+    Broker(size_t num_conn) : num_conn(num_conn) {
         transport = std::make_unique<Transport>();
         data_buf = new MessageBuffer<T>(bkr_buff_cap, transport->get_pd());
         ctrl_buf = new MessageBuffer<uint64_t>(1, transport->get_pd(), 1);
@@ -52,15 +52,12 @@ public:
     }
 
     // gets called after constructing mbuf
-    // TODO: add num_qp arg in init_transport()
     void init_transport(int gid_idx = -1) {
         // initialize ctrl_buf (which contains loop_cnt and write_idx)
         memset(ctrl_buf->get_data(), 0, ctrl_buf->get_total_size());
 
-        //// For producer testing, change num_qp to 1 for now.
-        //// Full test should set to 2 to connect with consumer as well
-        //transport->init(nullptr, 1, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
-        transport->init(nullptr, 2, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
+        // num_conn: number of connections to handle. i.e., # of producers + consumers
+        transport->init(nullptr, num_conn, data_buf->get_mr(), ctrl_buf->get_mr(), gid_idx);
     }
 
     inline T *data() {

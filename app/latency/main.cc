@@ -74,7 +74,7 @@ void run_consumer() {
 
 void run_broker() {
     std::cout << "Running as Broker" << std::endl;
-    auto broker = new rmq::Broker<int>();
+    auto broker = new rmq::Broker<int>(2);
     broker->init_transport();
     while (1) {
         //std::cout << broker->ctrl()[0] << std::endl;
