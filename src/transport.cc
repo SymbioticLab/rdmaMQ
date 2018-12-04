@@ -118,102 +118,96 @@ void Transport::init_local_info(int gid_idx) {
     }
 }
 
-void Transport::modify_qp_to_INIT() {
+void Transport::modify_qp_to_INIT(size_t qp_idx) {
     struct ibv_qp_attr attr;
     struct ibv_qp_init_attr init_attr;
 
-    for (size_t i = 0; i < num_qp; i++) {
-        assert_exit(ibv_query_qp(qp[i], &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
-        assert_exit(attr.qp_state == IBV_QPS_RESET, "Error: QP state not RESET when calling modify_qp_to_INIT().");
+    assert_exit(ibv_query_qp(qp[qp_idx], &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
+    assert_exit(attr.qp_state == IBV_QPS_RESET, "Error: QP state not RESET when calling modify_qp_to_INIT().");
 
-        memset(&attr, 0, sizeof(struct ibv_qp_attr));
-        attr.qp_state           = IBV_QPS_INIT;
-        attr.pkey_index         = 0;
-        attr.port_num           = tr_phy_port_num;
-        attr.qp_access_flags    = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE |
-                                    IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_ATOMIC;
+    memset(&attr, 0, sizeof(struct ibv_qp_attr));
+    attr.qp_state           = IBV_QPS_INIT;
+    attr.pkey_index         = 0;
+    attr.port_num           = tr_phy_port_num;
+    attr.qp_access_flags    = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE |
+                                IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_ATOMIC;
 
-        assert_exit(ibv_modify_qp(qp[i], &attr,
-            IBV_QP_STATE            |
-            IBV_QP_PKEY_INDEX       |
-            IBV_QP_PORT             |
-            IBV_QP_ACCESS_FLAGS) == 0, "Failed to modify QP to INIT.");
-    }
+    assert_exit(ibv_modify_qp(qp[qp_idx], &attr,
+        IBV_QP_STATE            |
+        IBV_QP_PKEY_INDEX       |
+        IBV_QP_PORT             |
+        IBV_QP_ACCESS_FLAGS) == 0, "Failed to modify QP to INIT.");
     LOG_DEBUG("Modify QP to INIT state.\n");
 }
 
-void Transport::modify_qp_to_RTR(uint8_t sl) {
+void Transport::modify_qp_to_RTR(size_t qp_idx, uint8_t sl) {
     struct ibv_qp_attr attr;
     struct ibv_qp_init_attr init_attr;
 
-    for (size_t i = 0; i < num_qp; i++) {
-        assert_exit(ibv_query_qp(qp[i], &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
-        assert_exit(attr.qp_state == IBV_QPS_INIT, "Error: QP state not INIT when calling modify_qp_to_RTR().");
+    assert_exit(ibv_query_qp(qp[qp_idx], &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
+    assert_exit(attr.qp_state == IBV_QPS_INIT, "Error: QP state not INIT when calling modify_qp_to_RTR().");
 
-        memset(&attr, 0, sizeof(attr));
-        attr.qp_state               = IBV_QPS_RTR;
-        //attr.path_mtu               = get_ibv_mtu(tr_path_mtu);
-        attr.path_mtu               = IBV_MTU_2048;
-        attr.dest_qp_num            = remote_info[i].qpn;
-        attr.rq_psn                 = remote_info[i].psn;
-        attr.max_dest_rd_atomic     = 1;                    // TODO: MORE ON THIS LATER
-        attr.min_rnr_timer          = 12;
-        attr.ah_attr.is_global      = 0;
-        attr.ah_attr.dlid           = remote_info[i].lid;
-        attr.ah_attr.sl             = sl;
-        attr.ah_attr.src_path_bits  = 0;
-        attr.ah_attr.port_num       = tr_phy_port_num;
+    memset(&attr, 0, sizeof(attr));
+    attr.qp_state               = IBV_QPS_RTR;
+    //attr.path_mtu               = get_ibv_mtu(tr_path_mtu);
+    attr.path_mtu               = IBV_MTU_2048;
+    attr.dest_qp_num            = remote_info[qp_idx].qpn;
+    attr.rq_psn                 = remote_info[qp_idx].psn;
+    attr.max_dest_rd_atomic     = 1;                    // TODO: MORE ON THIS LATER
+    attr.min_rnr_timer          = 12;
+    attr.ah_attr.is_global      = 0;
+    attr.ah_attr.dlid           = remote_info[qp_idx].lid;
+    attr.ah_attr.sl             = sl;
+    attr.ah_attr.src_path_bits  = 0;
+    attr.ah_attr.port_num       = tr_phy_port_num;
 
-        //LOG_DEBUG("Modify_to_RTR: dest_qp_num: %06x\n", attr.dest_qp_num);
-        //LOG_DEBUG("Modify_to_RTR: local psn(sq_psn): %06x\n", local_info[i].psn);
-        //LOG_DEBUG("Modify_to_RTR: rq_psn: %06x\n", attr.rq_psn);
-        //LOG_DEBUG("Modify_to_RTR: dlid: %04x\n", attr.ah_attr.dlid);
+    //LOG_DEBUG("Modify_to_RTR: dest_qp_num: %06x\n", attr.dest_qp_num);
+    //LOG_DEBUG("Modify_to_RTR: local psn(sq_psn): %06x\n", local_info[i].psn);
+    //LOG_DEBUG("Modify_to_RTR: rq_psn: %06x\n", attr.rq_psn);
+    //LOG_DEBUG("Modify_to_RTR: dlid: %04x\n", attr.ah_attr.dlid);
 
-        // check for RoCE
-        if (remote_info[i].gid.global.interface_id) {
-            LOG_DEBUG("Setting attr.ah_attr for RoCE.\n");
-            attr.ah_attr.is_global = 1;
-            attr.ah_attr.grh.hop_limit = 1;
-            attr.ah_attr.grh.dgid = remote_info[i].gid;
-            attr.ah_attr.grh.sgid_index = local_info[i].gid_idx;
-        }
-
-        assert_exit(ibv_modify_qp(qp[i], &attr,
-            IBV_QP_STATE              |
-            IBV_QP_AV                 |
-            IBV_QP_PATH_MTU           |
-            IBV_QP_DEST_QPN           |
-            IBV_QP_RQ_PSN             |
-            IBV_QP_MAX_DEST_RD_ATOMIC |
-            IBV_QP_MIN_RNR_TIMER) == 0, "Failed to modify QP to RTR.");
+    // check for RoCE
+    if (remote_info[qp_idx].gid.global.interface_id) {
+        LOG_DEBUG("Setting attr.ah_attr for RoCE.\n");
+        attr.ah_attr.is_global = 1;
+        attr.ah_attr.grh.hop_limit = 1;
+        attr.ah_attr.grh.dgid = remote_info[qp_idx].gid;
+        attr.ah_attr.grh.sgid_index = local_info[qp_idx].gid_idx;
     }
+
+    assert_exit(ibv_modify_qp(qp[qp_idx], &attr,
+        IBV_QP_STATE              |
+        IBV_QP_AV                 |
+        IBV_QP_PATH_MTU           |
+        IBV_QP_DEST_QPN           |
+        IBV_QP_RQ_PSN             |
+        IBV_QP_MAX_DEST_RD_ATOMIC |
+        IBV_QP_MIN_RNR_TIMER) == 0, "Failed to modify QP to RTR.");
     LOG_DEBUG("Modify QP to RTR state.\n");
 }
 
-void Transport::modify_qp_to_RTS() {
-    struct ibv_qp_attr attr;	
+void Transport::modify_qp_to_RTS(size_t qp_idx) {
+    struct ibv_qp_attr attr;
     struct ibv_qp_init_attr init_attr;
 
-    for (size_t i = 0; i < num_qp; i++) {
-        assert_exit(ibv_query_qp(qp[i], &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
-        assert_exit(attr.qp_state == IBV_QPS_RTR, "Error: QP state not RTR when calling modify_qp_to_RTS().");
+    assert_exit(ibv_query_qp(qp[qp_idx], &attr, IBV_QP_STATE, &init_attr) == 0, "Failed to query QP.");
+    assert_exit(attr.qp_state == IBV_QPS_RTR, "Error: QP state not RTR when calling modify_qp_to_RTS().");
 
-        memset(&attr, 0, sizeof(struct ibv_qp_attr));
-        attr.qp_state	    = IBV_QPS_RTS;
-        attr.sq_psn	        = local_info[i].psn;
-        attr.timeout	    = 14;
-        attr.retry_cnt	    = 7;
-        attr.rnr_retry	    = 7;    //infinite
-        attr.max_rd_atomic  = 1;
+    memset(&attr, 0, sizeof(struct ibv_qp_attr));
+    attr.qp_state	    = IBV_QPS_RTS;
+    attr.sq_psn	        = local_info[qp_idx].psn;
+    attr.timeout	    = 14;
+    attr.retry_cnt	    = 7;
+    attr.rnr_retry	    = 7;    //infinite
+    attr.max_rd_atomic  = 1;
 
-        assert_exit(ibv_modify_qp(qp[i], &attr,
-            IBV_QP_STATE              |
-            IBV_QP_TIMEOUT            |
-            IBV_QP_RETRY_CNT          |
-            IBV_QP_RNR_RETRY          |
-            IBV_QP_SQ_PSN             |
-            IBV_QP_MAX_QP_RD_ATOMIC) == 0, "Failed to modify QP to RTS");
-    }
+    assert_exit(ibv_modify_qp(qp[qp_idx], &attr,
+        IBV_QP_STATE              |
+        IBV_QP_TIMEOUT            |
+        IBV_QP_RETRY_CNT          |
+        IBV_QP_RNR_RETRY          |
+        IBV_QP_SQ_PSN             |
+        IBV_QP_MAX_QP_RD_ATOMIC) == 0, "Failed to modify QP to RTS");
     LOG_DEBUG("Modify QP to RTS state.\n");
 }
 
@@ -349,18 +343,20 @@ void Transport::init(const char *server_addr, size_t num_qp, struct ibv_mr *data
 
     init_local_info(gid_idx);
     
-    modify_qp_to_INIT();
 
     for (size_t i = 0; i < num_qp; i++) {
+        modify_qp_to_INIT(i);
+
         if (server_addr) {      // client
             hand_shake_client(i, server_addr);
         } else {                // server
             hand_shake_server(i);
         }
+
+        modify_qp_to_RTR(i);     // sl = 0
+        modify_qp_to_RTS(i);
     }
 
-    modify_qp_to_RTR();     // sl = 0
-    modify_qp_to_RTS();
 }
 
 void Transport::poll_from_cq(int num_entries, size_t qp_idx) {

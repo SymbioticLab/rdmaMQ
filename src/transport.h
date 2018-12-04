@@ -64,11 +64,11 @@ private:
     void init_local_info(int gid_idx);
 
     // gets called after create_qp();
-    void modify_qp_to_INIT();
+    void modify_qp_to_INIT(size_t qp_idx);
 
     // gets called after exchaning info with the remote node
-    void modify_qp_to_RTR(uint8_t sl = 0);
-    void modify_qp_to_RTS();
+    void modify_qp_to_RTR(size_t qp_idx, uint8_t sl = 0);
+    void modify_qp_to_RTS(size_t qp_idx);
 
     // exchange node info for RDMA (routing, raddr, etc.)
     void hand_shake_client(size_t qp_idx, const char * server_addr);
