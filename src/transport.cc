@@ -277,7 +277,7 @@ void Transport::hand_shake_server(size_t qp_idx) {
     hints.ai_flags = AI_PASSIVE;
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    int s = getaddrinfo(nullptr, service, &hints, &res); 
+    int s = getaddrinfo(nullptr, service, &hints, &res);
     assert_exit(s == 0, "ERROR: getting address info of server: " + std::string(gai_strerror(s)) + ".");
 
     for (t = res; t; t = t->ai_next) {
@@ -296,10 +296,13 @@ void Transport::hand_shake_server(size_t qp_idx) {
     assert_exit(sockfd >= 0, "Error binding via socket.");
 
     listen(sockfd, 1);
-    connfd = accept(sockfd, NULL, 0);
+    struct sockaddr_in client_addr;
+    auto addr_len = sizeof(client_addr);
+    connfd = accept(sockfd, reinterpret_cast<struct sockaddr *>(&client_addr), reinterpret_cast<socklen_t *>(&addr_len));
     close(sockfd);
     assert_exit(connfd >= 0, "Error accepting conn from client via socket: " +
                 std::string(strerror(errno)) + ".");
+    LOG_INFO("Connected with client from %s\n", inet_ntoa(client_addr.sin_addr));
     
     int byte_recved = recv(connfd, msg, sizeof(msg), MSG_WAITALL);
     LOG_DEBUG("In hand_shake_server: Byte_recved = %d\n", byte_recved);
