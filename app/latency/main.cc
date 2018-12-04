@@ -58,15 +58,18 @@ void run_producer() {
 void run_consumer() {
     std::cout << "Running as Consumer" << std::endl;
     init_lat_array();
-    auto consumer = new rmq::Consumer<int>(1000, "10.0.0.2");
+    auto consumer = new rmq::Consumer<int>(NUM_REQ, "10.0.0.2");
     consumer->init_transport();
-    sleep(2);   // so that producer can write something
     std::cout << "remote write idx = " << consumer->fetch_write_idx() << std::endl;
-    for (int i = 0; i < 100; i++) {
-        consumer->pull(i, i, 1);
-        std::cout << "Data read: " << consumer->data()[i] << std::endl;
+    for (size_t i = 0; i < NUM_REQ; i++) {
+        start_cycles[i] = rmq::get_cycles();
+        size_t read_idx = i % rmq::bkr_buff_cap;
+        consumer->pull(0, read_idx, 1);
+        end_cycles[i] = rmq::get_cycles();
+        //std::cout << "Data read: " << consumer->data()[i] << std::endl;
     }
-    while(1) {}
+    report_perf();
+    //while(1) {}
 }
 
 void run_broker() {
@@ -75,7 +78,7 @@ void run_broker() {
     broker->init_transport();
     while (1) {
         //std::cout << broker->ctrl()[0] << std::endl;
-    }        // can't return
+    } // can't return
 }
 
 int main(int argc, char **argv) {
@@ -114,7 +117,5 @@ int main(int argc, char **argv) {
     //auto transport = std::make_shared<rmq::Transport>();
     //rmq::MessageBuffer<int> buffer(10, transport->get_pd());
 
-    delete[] start_cycles;
-    delete[] end_cycles;
     return 0;
 }
