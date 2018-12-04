@@ -18,7 +18,7 @@
 
 namespace rmq {
 
-#define DEBUG_MODE
+//#define DEBUG_MODE
 #define INFO_MODE
 #define MEASURE_LAT
 

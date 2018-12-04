@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <math.h>
 
-size_t NUM_REQ = 1000;
+size_t NUM_REQ = 1000000;
 size_t *start_cycles;
 size_t *end_cycles;
 
@@ -22,17 +22,18 @@ void report_perf() {
     auto lat = new double[NUM_REQ];
     double cpu_mhz = rmq::get_cpu_mhz();
     for (size_t i = 0; i < NUM_REQ; i++) {
-        std::cout << "i = " << i << std::endl;
         lat[i] = (double)(end_cycles[i] - start_cycles[i]) / cpu_mhz;
     }
     std::sort(lat, lat + NUM_REQ);
-    size_t idx_99, idx_99_9, idx_99_99;
+    size_t idx_m, idx_99, idx_99_9, idx_99_99;
     size_t measure_cnt = NUM_REQ;
+    idx_m = ceil(measure_cnt * 0.5);
     idx_99 = ceil(measure_cnt * 0.99);
     idx_99_9 = ceil(measure_cnt * 0.999);
     idx_99_99 = ceil(measure_cnt * 0.9999);
     //printf("idx_99 = %lu; idx_99_t = %lu; idx_99_99 = %lu\n", idx_99, idx_99_9, idx_99_99);
     printf("@MEASUREMENT:\n");
+    printf("MEDIAN = %.2f\n", lat[idx_m]);
     printf("99 TAIL = %.2f\n", lat[idx_99]);
     printf("99.9 TAIL = %.2f\n", lat[idx_99_9]);
     printf("99.99 TAIL = %.2f\n", lat[idx_99_99]);
@@ -40,20 +41,17 @@ void report_perf() {
 
 void run_producer() {
     std::cout << "Running as Producer" << std::endl;
-    ////init_lat_array();
-    auto producer = new rmq::Producer<int>(1000, "10.0.0.2");
+    init_lat_array();
+    auto producer = new rmq::Producer<int>(NUM_REQ, "10.0.0.2");
     producer->init_transport();
     for (size_t i = 0; i < NUM_REQ; i++) {
         producer->data()[i] = i;
-        ////start_cycles[i] = rmq::get_cycles();
+        start_cycles[i] = rmq::get_cycles();
         producer->push(i, 1);
-        ////end_cycles[i] = rmq::get_cycles();
+        end_cycles[i] = rmq::get_cycles();
         //std::cout << "Data: " << producer->data()[i] << std::endl;
     }
-    for (size_t i = 0; i < NUM_REQ; i++) {
-        producer->push(i, 1);
-    }
-    ////report_perf();
+    report_perf();
     //while(1) {}
 }
 
@@ -111,7 +109,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    std::cout << "Jump out of loop. Shouldn't see this." << std::endl;
+    //std::cout << "Jump out of loop. Shouldn't see this." << std::endl;
 
     //auto transport = std::make_shared<rmq::Transport>();
     //rmq::MessageBuffer<int> buffer(10, transport->get_pd());
