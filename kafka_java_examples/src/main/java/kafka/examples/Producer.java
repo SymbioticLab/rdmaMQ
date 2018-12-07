@@ -44,9 +44,12 @@ public class Producer extends Thread {
     }
 
     public void run() {
-        int messageNo = 1;
-        while (true) {
-            String messageStr = "Message_" + messageNo;
+        long messageNo = 1;
+        long NUM_REQ = 1000000;
+        long diff[] = new long[NUM_REQ];
+        while (messageNo - 1 < NUM_REQ) {
+        //while (true) {
+            //String messageStr = "Message_" + messageNo;
             long startTime = System.currentTimeMillis();
             if (isAsync) { // Send asynchronously
                 producer.send(new ProducerRecord<>(topic,
@@ -57,10 +60,12 @@ public class Producer extends Thread {
                     producer.send(new ProducerRecord<>(topic,
                         messageNo,
                         messageStr)).get();
-                    System.out.println("Sent message: (" + messageNo + ", " + messageStr + ")");
+                    //System.out.println("Sent message: (" + messageNo + ", " + messageStr + ")");
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                diff[messageNo-1] = elapsedTime;
             }
             ++messageNo;
         }
