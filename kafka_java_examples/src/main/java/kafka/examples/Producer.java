@@ -27,6 +27,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.lang.Math;
+import java.util.Arrays;
 
 public class Producer extends Thread {
     //private final KafkaProducer<Integer, String> producer;
@@ -52,7 +53,7 @@ public class Producer extends Thread {
         while (messageNo - 1 < NUM_REQ) {
         //while (true) {
             //String messageStr = "Message_" + messageNo;
-            int messageInt = 0;
+            int messageInt = 233;
             if (isAsync) { // Send asynchronously
                 long startTime = System.currentTimeMillis();
                 producer.send(new ProducerRecord<>(topic,
@@ -74,6 +75,7 @@ public class Producer extends Thread {
             }
             ++messageNo;
         }
+        Arrays.sort(lat);
         int idx_m = (int)Math.ceil(NUM_REQ * 0.5);
         int idx_99 = (int)Math.ceil(NUM_REQ * 0.99);
         int idx_99_9 = (int)Math.ceil(NUM_REQ * 0.999);
