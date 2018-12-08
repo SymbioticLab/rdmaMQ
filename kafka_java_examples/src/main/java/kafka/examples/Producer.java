@@ -48,17 +48,19 @@ public class Producer extends Thread {
 
     public void run() {
         int messageNo = 1;
-        int NUM_REQ = 100000;
+        int NUM_REQ = 5000000;
         long lat[] = new long[NUM_REQ];
+        long initTime = System.currentTimeMillis();
         while (messageNo - 1 < NUM_REQ) {
         //while (true) {
             //String messageStr = "Message_" + messageNo;
             int messageInt = 233;
             if (isAsync) { // Send asynchronously
-                long startTime = System.currentTimeMillis();
+                //long startTime = System.currentTimeMillis();
                 producer.send(new ProducerRecord<>(topic,
                     messageNo,
-                    messageInt), new DemoCallBack(startTime, messageNo, messageInt));
+                    messageInt));
+                    //messageInt), new DemoCallBack(startTime, messageNo, messageInt));
             } else { // Send synchronously
                 try {
                     long startTime = System.nanoTime();
@@ -75,16 +77,24 @@ public class Producer extends Thread {
             }
             ++messageNo;
         }
-        Arrays.sort(lat);
-        int idx_m = (int)Math.ceil(NUM_REQ * 0.5);
-        int idx_99 = (int)Math.ceil(NUM_REQ * 0.99);
-        int idx_99_9 = (int)Math.ceil(NUM_REQ * 0.999);
-        int idx_99_99 = (int)Math.ceil(NUM_REQ * 0.9999);
         System.out.println("@Producer MEASUREMENT:");
-        System.out.println("Producer MEDIAN = " + (double)lat[idx_m]/1000 + " us");
-        System.out.println("Producer 99 TAIL = " + (double)lat[idx_99]/1000 + " us");
-        System.out.println("Producer 99.9 TAIL = " + (double)lat[idx_99_9]/1000 + " us");
-        System.out.println("Producer 99.99 TAIL = " + (double)lat[idx_99_99]/1000 + " us");
+        if (!isAsync) {
+            Arrays.sort(lat);
+            int idx_m = (int)Math.ceil(NUM_REQ * 0.5);
+            int idx_99 = (int)Math.ceil(NUM_REQ * 0.99);
+            int idx_99_9 = (int)Math.ceil(NUM_REQ * 0.999);
+            int idx_99_99 = (int)Math.ceil(NUM_REQ * 0.9999);
+            System.out.println("Producer MEDIAN = " + (double)lat[idx_m]/1000 + " us");
+            System.out.println("Producer 99 TAIL = " + (double)lat[idx_99]/1000 + " us");
+            System.out.println("Producer 99.9 TAIL = " + (double)lat[idx_99_9]/1000 + " us");
+            System.out.println("Producer 99.99 TAIL = " + (double)lat[idx_99_99]/1000 + " us");
+        }
+        long totalTime = System.currentTimeMillis() - initTime;
+        System.out.println("Producer totalTime = " + (double)(totalTime) + " msec");
+        System.out.println("DEBUG total time = " + (totalTime/(double)1000));
+        //System.out.println("Producer totalTime = " + (double)(totalTime/1000000000) + " sec");
+        System.out.println("Producer Throughput = " + (double)messageNo/(totalTime/(double)1000) + " mesg/sec");
+
     }
 }
 
@@ -112,8 +122,7 @@ class DemoCallBack implements Callback {
      */
     public void onCompletion(RecordMetadata metadata, Exception exception) {
         long elapsedTime = System.currentTimeMillis() - startTime;
-        System.out.println("elapsedTime: " + elapsedTime);
-        /*
+        //System.out.println("elapsedTime: " + elapsedTime);
         if (metadata != null) {
             System.out.println(
                 "message(" + key + ", " + message + ") sent to partition(" + metadata.partition() +
@@ -122,6 +131,5 @@ class DemoCallBack implements Callback {
         } else {
             exception.printStackTrace();
         }
-        */
     }
 }

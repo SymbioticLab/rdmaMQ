@@ -53,6 +53,7 @@ public class Consumer extends ShutdownableThread {
     public void doWork() {
         int numMessages = 0;
         ArrayList<Long> lat = new ArrayList<Long>();
+        long initTime = System.nanoTime();
         consumer.subscribe(Collections.singletonList(this.topic));
         while (true) {
             long startTime = System.nanoTime();
@@ -61,16 +62,17 @@ public class Consumer extends ShutdownableThread {
             //ConsumerRecords<Integer, String> records = consumer.poll(Duration.ofSeconds(1));
             for (ConsumerRecord<Integer, Integer> record : records) {
             //for (ConsumerRecord<Integer, String> record : records) {
-                System.out.println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
+                //System.out.println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
+                numMessages++;
             }
-            numMessages++;
-            System.out.println("numMessages: " + numMessages);
-            if (numMessages > 50000) {
+            //System.out.println("numMessages: " + numMessages);
+            if (numMessages > 500000) {
                 break;
             }
         }
         // Assume each poll gets only 1 message (actually most time it is the case)
         //System.out.println("PUPUPUPUPU " + numMessages);
+        long totalTime = System.nanoTime() - initTime;
         Collections.sort(lat);
         int NUM_REQ = lat.size();
         int idx_m = (int)Math.ceil(NUM_REQ * 0.5);
@@ -78,6 +80,7 @@ public class Consumer extends ShutdownableThread {
         System.out.println("@Consumer MEASUREMENT:");
         System.out.println("Consumer MEDIAN = " + (double)lat.get(idx_m)/1000 + " us");
         System.out.println("Consumer 99 TAIL = " + (double)lat.get(idx_99)/1000 + " us");
+        System.out.println("Consumer Throughput = " + (double)numMessages/(totalTime/(double)1000000000) + " mesg/sec");
         System.exit(1);
     }
 
