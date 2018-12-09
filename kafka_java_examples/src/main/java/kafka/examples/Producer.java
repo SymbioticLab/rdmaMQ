@@ -41,6 +41,7 @@ public class Producer extends Thread {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaProperties.KAFKA_SERVER_URL + ":" + KafkaProperties.KAFKA_SERVER_PORT);
         props.put(ProducerConfig.CLIENT_ID_CONFIG, "DemoProducer");
+        //props.put(ProducerConfig.BATCH_SIZE_CONFIG, "4");   // Comment out when measure throughput!! Change value based on mesg (value) size
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class.getName());
         //props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         //props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class.getName());
@@ -52,11 +53,15 @@ public class Producer extends Thread {
 
     public void run() {
         int messageNo = 1;
-        int NUM_REQ = 10000000;
+        int NUM_REQ = 10000000;     // large num for measure THROUGHPUT; remember to use "async" mode
+        //int NUM_REQ = 50000;     // small num for measure LATENCY; also remember to use "sync" mode
         long lat[] = new long[NUM_REQ];
         long initTime = System.currentTimeMillis();
+        //int message = 233;
+        byte[] message = new byte[4];
+        Arrays.fill(message, (byte)8);
         ////int messageInt = 233;
-        byte[] messageArr = new byte[4];
+        ////byte[] messageArr = new byte[4];
         //byte[] messageArr = "PUPUPU".getBytes();
         while (messageNo - 1 < NUM_REQ) {
         //while (true) {
@@ -65,7 +70,8 @@ public class Producer extends Thread {
                 //long startTime = System.currentTimeMillis();
                 producer.send(new ProducerRecord<>(topic,
                     messageNo,
-                    messageArr));
+                    message));
+                    //messageArr));
                     //messageInt));
                     //messageInt), new DemoCallBack(startTime, messageNo, messageInt));
             } else { // Send synchronously
@@ -73,7 +79,8 @@ public class Producer extends Thread {
                     long startTime = System.nanoTime();
                     producer.send(new ProducerRecord<>(topic,
                         messageNo,
-                        messageArr)).get();
+                        message)).get();
+                        //messageArr)).get();
                         //messageInt)).get();
                     //System.out.println("Sent message: (" + messageNo + ", " + messageStr + ")");
                     long elapsedTime = System.nanoTime() - startTime;
@@ -94,12 +101,13 @@ public class Producer extends Thread {
             int idx_99_99 = (int)Math.ceil(NUM_REQ * 0.9999);
             System.out.println("Producer MEDIAN = " + (double)lat[idx_m]/(double)1000 + " us");
             System.out.println("Producer 99 TAIL = " + (double)lat[idx_99]/(double)1000 + " us");
-            System.out.println("Producer 99.9 TAIL = " + (double)lat[idx_99_9]/(double)1000 + " us");
-            System.out.println("Producer 99.99 TAIL = " + (double)lat[idx_99_99]/(double)1000 + " us");
+            //System.out.println("Producer 99.9 TAIL = " + (double)lat[idx_99_9]/(double)1000 + " us");
+            //System.out.println("Producer 99.99 TAIL = " + (double)lat[idx_99_99]/(double)1000 + " us");
         }
         long totalTime = System.currentTimeMillis() - initTime;
         System.out.println("Producer totalTime = " + (double)(totalTime) + " msec");
         System.out.println("Producer num messages = " + NUM_REQ);
+        System.out.println("Producer messageNo = " + messageNo);
         //System.out.println("Producer totalTime = " + (double)(totalTime/1000000000) + " sec");
         System.out.println("Producer Throughput = " + (double)messageNo/(totalTime/(double)1000) + " mesg/sec");
 

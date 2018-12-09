@@ -42,10 +42,13 @@ public class Consumer extends ShutdownableThread {
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
         props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
-        props.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, "4");       // Comment out when measure throughput !! Change value based on mesg (value) size
+        /* the below three configs don't really limit the *real* batch size for consumer; can't really measure consumer single message latency */
+        //props.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, "4");    // Comment out when measure throughput!! Change value based on mesg (value) size
+        //props.put(ConsumerConfig.FETCH_MAX_BYTES_CONFIG, "4");              // Comment out when measure throughput!! Change value based on mesg (value) size
+        //props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "500");             // Comment out when measure throughput!!
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.IntegerDeserializer");
-        //props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.IntegerDeserializer");
         //props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
+        //props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.IntegerDeserializer");
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArrayDeserializer");
 
         consumer = new KafkaConsumer<>(props);
@@ -54,39 +57,45 @@ public class Consumer extends ShutdownableThread {
 
     @Override
     public void doWork() {
+        System.out.println("ENTER DO WORK");
         int numMessages = 0;
-        ArrayList<Long> lat = new ArrayList<Long>();
+        //ArrayList<Long> lat = new ArrayList<Long>();
         long initTime = System.nanoTime();
         consumer.subscribe(Collections.singletonList(this.topic));
         while (true) {
-            long startTime = System.nanoTime();
+            //long startTime = System.nanoTime();
             //ConsumerRecords<Integer, String> records = consumer.poll(Duration.ofSeconds(1));
-            //ConsumerRecords<Integer, Integer> records = consumer.poll(Duration.ofSeconds(1));
+            ////ConsumerRecords<Integer, Integer> records = consumer.poll(Duration.ofSeconds(5));
+            //System.out.println("BEFORE POLL");
             ConsumerRecords<Integer, byte[]> records = consumer.poll(Duration.ofSeconds(1));
-            lat.add(System.nanoTime() - startTime);
+            //System.out.println("AFTER POLL");
+            //long elapsedTime = System.nanoTime() - startTime;
+            //lat.add(elapsedTime);
             //for (ConsumerRecord<Integer, String> record : records) {
-            //for (ConsumerRecord<Integer, Integer> record : records) {
+            ////for (ConsumerRecord<Integer, Integer> record : records) {
             for (ConsumerRecord<Integer, byte[]> record : records) {
                 //System.out.println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
                 numMessages++;
             }
             //System.out.println("numMessages: " + numMessages);
-            if (numMessages > 50000) {      // smaller iteration used to measure LATENCY
-            //if (numMessages > 10000000) {     // larger iteration used to measure THROUGHPUT
+            //if (numMessages > 100) {      // smaller iteration used to measure LATENCY; Don't measure
+            if (numMessages > 10000000) {     // larger iteration used to measure THROUGHPUT
                 break;
             }
         }
         // Assume each poll gets only 1 message (actually most time it is the case)
         //System.out.println("PUPUPUPUPU " + numMessages);
         long totalTime = System.nanoTime() - initTime;
-        Collections.sort(lat);
-        int NUM_REQ = lat.size();   // calculating lat with batch
-        int idx_m = (int)Math.ceil(NUM_REQ * 0.5);
-        int idx_99 = (int)Math.ceil(NUM_REQ * 0.99);
+        //Collections.sort(lat);
+        //int NUM_REQ = lat.size();   // calculating lat with batch
+        //int idx_m = (int)Math.ceil(NUM_REQ * 0.5);
+        //int idx_99 = (int)Math.ceil(NUM_REQ * 0.99);
         System.out.println("@Consumer MEASUREMENT:");
+        //System.out.println("DEBUG lat = " + lat);
         System.out.println("Consumer num messages = " + numMessages);
-        System.out.println("Consumer MEDIAN = " + (double)lat.get(idx_m)/(double)1000 + " us");
-        System.out.println("Consumer 99 TAIL = " + (double)lat.get(idx_99)/(double)1000 + " us");
+        //System.out.println("Consumer NUM_REQ = " + NUM_REQ);
+        //System.out.println("Consumer MEDIAN = " + (double)lat.get(idx_m)/1000 + " us");
+        //System.out.println("Consumer 99 TAIL = " + (double)lat.get(idx_99)/1000 + " us");
         System.out.println("Consumer Throughput = " + (double)numMessages/(totalTime/(double)1000000000) + " mesg/sec");
         System.exit(1);
     }
