@@ -66,7 +66,8 @@ public class Consumer extends ShutdownableThread {
                 numMessages++;
             }
             //System.out.println("numMessages: " + numMessages);
-            if (numMessages > 500000) {
+            //if (numMessages > 500000) {
+            if (numMessages > 10000000) {
                 break;
             }
         }
@@ -78,6 +79,7 @@ public class Consumer extends ShutdownableThread {
         int idx_m = (int)Math.ceil(NUM_REQ * 0.5);
         int idx_99 = (int)Math.ceil(NUM_REQ * 0.99);
         System.out.println("@Consumer MEASUREMENT:");
+        System.out.println("Consumer num messages = " + numMessages);
         System.out.println("Consumer MEDIAN = " + (double)lat.get(idx_m)/1000 + " us");
         System.out.println("Consumer 99 TAIL = " + (double)lat.get(idx_99)/1000 + " us");
         System.out.println("Consumer Throughput = " + (double)numMessages/(totalTime/(double)1000000000) + " mesg/sec");

@@ -48,7 +48,7 @@ public class Producer extends Thread {
 
     public void run() {
         int messageNo = 1;
-        int NUM_REQ = 5000000;
+        int NUM_REQ = 10000000;
         long lat[] = new long[NUM_REQ];
         long initTime = System.currentTimeMillis();
         while (messageNo - 1 < NUM_REQ) {
@@ -91,7 +91,7 @@ public class Producer extends Thread {
         }
         long totalTime = System.currentTimeMillis() - initTime;
         System.out.println("Producer totalTime = " + (double)(totalTime) + " msec");
-        System.out.println("DEBUG total time = " + (totalTime/(double)1000));
+        System.out.println("Producer num messages = " + NUM_REQ);
         //System.out.println("Producer totalTime = " + (double)(totalTime/1000000000) + " sec");
         System.out.println("Producer Throughput = " + (double)messageNo/(totalTime/(double)1000) + " mesg/sec");
 
