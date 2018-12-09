@@ -23,6 +23,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -31,7 +32,8 @@ import java.util.Arrays;
 
 public class Producer extends Thread {
     //private final KafkaProducer<Integer, String> producer;
-    private final KafkaProducer<Integer, Integer> producer;
+    ////private final KafkaProducer<Integer, Integer> producer;
+    private final KafkaProducer<Integer, byte[]> producer;
     private final String topic;
     private final Boolean isAsync;
 
@@ -40,7 +42,9 @@ public class Producer extends Thread {
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaProperties.KAFKA_SERVER_URL + ":" + KafkaProperties.KAFKA_SERVER_PORT);
         props.put(ProducerConfig.CLIENT_ID_CONFIG, "DemoProducer");
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class.getName());
+        //props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        //props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
         producer = new KafkaProducer<>(props);
         this.topic = topic;
         this.isAsync = isAsync;
@@ -51,22 +55,26 @@ public class Producer extends Thread {
         int NUM_REQ = 10000000;
         long lat[] = new long[NUM_REQ];
         long initTime = System.currentTimeMillis();
+        ////int messageInt = 233;
+        byte[] messageArr = new byte[4];
+        //byte[] messageArr = "PUPUPU".getBytes();
         while (messageNo - 1 < NUM_REQ) {
         //while (true) {
             //String messageStr = "Message_" + messageNo;
-            int messageInt = 233;
             if (isAsync) { // Send asynchronously
                 //long startTime = System.currentTimeMillis();
                 producer.send(new ProducerRecord<>(topic,
                     messageNo,
-                    messageInt));
+                    messageArr));
+                    //messageInt));
                     //messageInt), new DemoCallBack(startTime, messageNo, messageInt));
             } else { // Send synchronously
                 try {
                     long startTime = System.nanoTime();
                     producer.send(new ProducerRecord<>(topic,
                         messageNo,
-                        messageInt)).get();
+                        messageArr)).get();
+                        //messageInt)).get();
                     //System.out.println("Sent message: (" + messageNo + ", " + messageStr + ")");
                     long elapsedTime = System.nanoTime() - startTime;
                     //System.out.println("elapsedTime: " + elapsedTime);
@@ -84,10 +92,10 @@ public class Producer extends Thread {
             int idx_99 = (int)Math.ceil(NUM_REQ * 0.99);
             int idx_99_9 = (int)Math.ceil(NUM_REQ * 0.999);
             int idx_99_99 = (int)Math.ceil(NUM_REQ * 0.9999);
-            System.out.println("Producer MEDIAN = " + (double)lat[idx_m]/1000 + " us");
-            System.out.println("Producer 99 TAIL = " + (double)lat[idx_99]/1000 + " us");
-            System.out.println("Producer 99.9 TAIL = " + (double)lat[idx_99_9]/1000 + " us");
-            System.out.println("Producer 99.99 TAIL = " + (double)lat[idx_99_99]/1000 + " us");
+            System.out.println("Producer MEDIAN = " + (double)lat[idx_m]/(double)1000 + " us");
+            System.out.println("Producer 99 TAIL = " + (double)lat[idx_99]/(double)1000 + " us");
+            System.out.println("Producer 99.9 TAIL = " + (double)lat[idx_99_9]/(double)1000 + " us");
+            System.out.println("Producer 99.99 TAIL = " + (double)lat[idx_99_99]/(double)1000 + " us");
         }
         long totalTime = System.currentTimeMillis() - initTime;
         System.out.println("Producer totalTime = " + (double)(totalTime) + " msec");
@@ -103,9 +111,11 @@ class DemoCallBack implements Callback {
     private final long startTime;
     private final int key;
     //private final String message;
-    private final int message;
+    //private final int message;
+    private final byte[] message;
 
-    public DemoCallBack(long startTime, int key, int message) {
+    //public DemoCallBack(long startTime, int key, int message) {
+    public DemoCallBack(long startTime, int key, byte[] message) {
         this.startTime = startTime;
         this.key = key;
         this.message = message;
