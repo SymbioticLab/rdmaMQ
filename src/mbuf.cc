@@ -27,5 +27,7 @@ template class MessageBuffer<char>;
 template class MessageBuffer<int>;
 template class MessageBuffer<uint64_t>;
 template class MessageBuffer<std::string>;
+template class MessageBuffer<msg16_t>;
+template class MessageBuffer<msg256_t>;
 
 }

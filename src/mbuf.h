@@ -2,7 +2,7 @@
 #define MBUF_H_
 
 #include <infiniband/verbs.h>
-//#include "rmq.h"
+#include "rmq.h"
 //#include "transport.h"
 #include "common.h"
 
