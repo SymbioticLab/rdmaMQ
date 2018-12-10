@@ -53,12 +53,12 @@ public class Producer extends Thread {
 
     public void run() {
         int messageNo = 1;
-        int NUM_REQ = 1000000;     // large num for measure THROUGHPUT; remember to use "async" mode
+        int NUM_REQ = 5000000;     // large num for measure THROUGHPUT; remember to use "async" mode
         //int NUM_REQ = 50000;     // small num for measure LATENCY; also remember to use "sync" mode
         long lat[] = new long[NUM_REQ];
         long initTime = System.currentTimeMillis();
         //int message = 233;
-        byte[] message = new byte[256];
+        byte[] message = new byte[64];
         Arrays.fill(message, (byte)5);
         ////int messageInt = 233;
         ////byte[] messageArr = new byte[4];

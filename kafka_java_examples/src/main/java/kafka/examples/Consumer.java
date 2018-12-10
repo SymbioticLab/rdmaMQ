@@ -100,7 +100,7 @@ public class Consumer extends ShutdownableThread {
             }
             //System.out.println("numMessages: " + numMessages);
             //if (numMessages > 1000) {      // smaller iteration used to measure LATENCY; Don't measure
-            if (numMessages > 1000000) {     // larger iteration used to measure THROUGHPUT
+            if (numMessages > 3000000) {     // larger iteration used to measure THROUGHPUT
                 break;
             }
         }
