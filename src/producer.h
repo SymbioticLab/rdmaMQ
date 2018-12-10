@@ -38,6 +38,8 @@ private:
     std::unique_ptr<MessageBuffer<uint64_t>> ctrl_buf;      // store write_addr
     std::unique_ptr<Transport> transport;
     std::string broker_ip;
+    uint64_t fetched_write_idx;                             // idx fetched from remote
+    uint64_t remote_write_idx;                              // used to check remote buf overflow
 
     size_t fetch_and_add_write_idx(size_t start_idx, size_t num_msg);
 

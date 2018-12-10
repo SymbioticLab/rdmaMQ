@@ -11,22 +11,36 @@ template <typename T>
 size_t Producer<T>::fetch_and_add_write_idx(size_t start_idx, size_t num_msg) {
     // First local buffer overflow check
     if (unlikely(num_msg > data_buf->get_capacity() - start_idx)) {
+        LOG_DEBUG("ATTENTION: local buffer overflow. num_msg = %lu\n", num_msg);
         num_msg = data_buf->get_capacity() - start_idx;
+        LOG_DEBUG("--> num_msg set to %lu\n", num_msg);
     }
 
     // Then check remote buffer(circular) overflow 
-    if (unlikely(num_msg > bkr_buff_cap - (ctrl_buf->get_data()[0] & bkr_low_mask))) {
-        num_msg = bkr_buff_cap - (ctrl_buf->get_data()[0] & bkr_low_mask);
+    if (unlikely(num_msg > bkr_buff_cap - remote_write_idx)) {
+        LOG_DEBUG("ATTENTION: remote buffer overflow. num_msg = %lu\n", num_msg);
+        num_msg = bkr_buff_cap - remote_write_idx;
+        //num_msg = bkr_buff_cap - (ctrl_buf->get_data()[0] & bkr_low_mask);
+        LOG_DEBUG("--> num_msg set to %lu\n", num_msg);
     }
 
+
     uint64_t compare_add = num_msg;
+    //LOG_DEBUG("compare_add = %lu\n", compare_add);
     transport->post_ATOMIC_FA(compare_add);
 
     transport->poll_from_cq(1);
+
+    fetched_write_idx = ctrl_buf->get_data()[0] & bkr_low_mask;
+
+    // keep track of what the remote write_idx will be after this push
+    remote_write_idx = (fetched_write_idx + num_msg) % bkr_low_mask;
+
     // at this point remote write idx is read into ctrl_buf->data()[0]
     // decimal version print
-    LOG_DEBUG("getting WRITE IDX: %" PRIu64 "\n", ctrl_buf->get_data()[0] & bkr_low_mask);
-    LOG_DEBUG("getting LOOP CNT: %" PRIu64 "\n", (ctrl_buf->get_data()[0] & bkr_high_mask) >> bkr_x);
+    LOG_DEBUG("getting fetched WRITE IDX: %" PRIu64 "\n", fetched_write_idx);
+    LOG_DEBUG("getting remote WRITE IDX: %" PRIu64 "\n", remote_write_idx);
+    //LOG_DEBUG("getting LOOP CNT: %" PRIu64 "\n", (ctrl_buf->get_data()[0] & bkr_high_mask) >> bkr_x);
     // Hex version print
     //LOG_DEBUG("getting WRITE IDX: 0x%08lx\n", ctrl_buf->get_data()[0] & bkr_low_mask);
     //LOG_DEBUG("getting LOOP CNT: 0x%08lx\n", (uint64_t)((ctrl_buf->get_data()[0] & bkr_high_mask) >> bkr_x));
@@ -44,8 +58,8 @@ size_t Producer<T>::push(size_t start_idx, size_t num_msg) {
 
     uint64_t local_addr = start_idx * sizeof(T) + transport->get_local_info()[0].data_vaddr;
     uint32_t length = num_msg * sizeof(T);
-    uint64_t write_idx = ctrl_buf->get_data()[0] & bkr_low_mask;
-    uint64_t remote_addr = write_idx * sizeof(T) + transport->get_remote_info()[0].data_vaddr;
+    //uint64_t write_idx = ctrl_buf->get_data()[0] & bkr_low_mask;
+    uint64_t remote_addr = fetched_write_idx * sizeof(T) + transport->get_remote_info()[0].data_vaddr;
     //std::cout << "start_idx: " << start_idx << std::endl;
     //printf("local_addr: %016lx\n", local_addr);
     //std::cout << "length: " << length << std::endl;
