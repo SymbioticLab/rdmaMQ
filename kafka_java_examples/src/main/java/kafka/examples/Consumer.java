@@ -21,6 +21,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -61,8 +62,27 @@ public class Consumer extends ShutdownableThread {
         int numMessages = 0;
         //ArrayList<Long> lat = new ArrayList<Long>();
         long initTime = System.nanoTime();
+
         consumer.subscribe(Collections.singletonList(this.topic));
+
+        /*
+        // get the relatively recent offset
+        consumer.seekToEnd(consumer.assignment());
+        // need to poll once to make seekToEnd take effect
+        consumer.poll(Duration.ofSeconds(1)); 
+        System.out.println("PUPUPU");
+        // set offset to curr pos - x
+        
+        System.out.println("partition set size = " + consumer.assignment().size());
+        for (TopicPartition partition: consumer.assignment()) {
+            long current_last_offset = consumer.position(partition);
+            System.out.println("current_last_offset = " + current_last_offset);
+            //consumer.seek(partition, current_last_offset - 1000000);       // watch out for offset
+        }
+        */ 
+
         while (true) {
+
             //long startTime = System.nanoTime();
             //ConsumerRecords<Integer, String> records = consumer.poll(Duration.ofSeconds(1));
             ////ConsumerRecords<Integer, Integer> records = consumer.poll(Duration.ofSeconds(5));
@@ -74,12 +94,13 @@ public class Consumer extends ShutdownableThread {
             //for (ConsumerRecord<Integer, String> record : records) {
             ////for (ConsumerRecord<Integer, Integer> record : records) {
             for (ConsumerRecord<Integer, byte[]> record : records) {
+                //System.out.println("Received message: (" + record.key() + ", " + java.util.Arrays.toString(record.value()) + ") at offset " + record.offset());
                 //System.out.println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
                 numMessages++;
             }
             //System.out.println("numMessages: " + numMessages);
-            //if (numMessages > 100) {      // smaller iteration used to measure LATENCY; Don't measure
-            if (numMessages > 10000000) {     // larger iteration used to measure THROUGHPUT
+            //if (numMessages > 1000) {      // smaller iteration used to measure LATENCY; Don't measure
+            if (numMessages > 1000000) {     // larger iteration used to measure THROUGHPUT
                 break;
             }
         }

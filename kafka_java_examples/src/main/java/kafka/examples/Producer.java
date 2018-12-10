@@ -41,7 +41,7 @@ public class Producer extends Thread {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaProperties.KAFKA_SERVER_URL + ":" + KafkaProperties.KAFKA_SERVER_PORT);
         props.put(ProducerConfig.CLIENT_ID_CONFIG, "DemoProducer");
-        //props.put(ProducerConfig.BATCH_SIZE_CONFIG, "4");   // Comment out when measure throughput!! Change value based on mesg (value) size
+        //props.put(ProducerConfig.BATCH_SIZE_CONFIG, "256");   // Comment out when measure throughput!! Change value based on mesg (value) size
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class.getName());
         //props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         //props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, IntegerSerializer.class.getName());
@@ -53,13 +53,13 @@ public class Producer extends Thread {
 
     public void run() {
         int messageNo = 1;
-        int NUM_REQ = 10000000;     // large num for measure THROUGHPUT; remember to use "async" mode
+        int NUM_REQ = 1000000;     // large num for measure THROUGHPUT; remember to use "async" mode
         //int NUM_REQ = 50000;     // small num for measure LATENCY; also remember to use "sync" mode
         long lat[] = new long[NUM_REQ];
         long initTime = System.currentTimeMillis();
         //int message = 233;
-        byte[] message = new byte[4];
-        Arrays.fill(message, (byte)8);
+        byte[] message = new byte[256];
+        Arrays.fill(message, (byte)5);
         ////int messageInt = 233;
         ////byte[] messageArr = new byte[4];
         //byte[] messageArr = "PUPUPU".getBytes();

@@ -85,10 +85,10 @@ public class KafkaConsumerProducerDemo {
         }
 
         if (isProducer) {
-            Producer producerThread = new Producer(KafkaProperties.TOPIC, isAsync);
+            Producer producerThread = new Producer(KafkaProperties.TOPIC2, isAsync);
             producerThread.start();
         } else {
-            Consumer consumerThread = new Consumer(KafkaProperties.TOPIC);
+            Consumer consumerThread = new Consumer(KafkaProperties.TOPIC2);
             consumerThread.start();
         }
 
