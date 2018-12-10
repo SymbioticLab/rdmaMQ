@@ -84,12 +84,12 @@ size_t Producer<T>::push_batch(size_t start_idx, size_t num_msg) {
     uint64_t local_addr = start_idx * sizeof(T) + transport->get_local_info()[0].data_vaddr;
     uint32_t length = sizeof(T);
     uint64_t remote_addr = fetched_write_idx * sizeof(T) + transport->get_remote_info()[0].data_vaddr;
-    int flag = 0;
+    int send_flag = 0;
     for (size_t i = 0; i < num_msg; i++) {
         if (i == num_msg - 1) {
-            flag = 1;
+            send_flag = 1;
         }
-        transport->post_WRITE_with_flag(local_addr, length, remote_addr, flag);
+        transport->post_WRITE_with_flag(local_addr, length, remote_addr, send_flag);
         local_addr += length;
         remote_addr += length;
     }

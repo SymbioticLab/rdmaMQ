@@ -69,6 +69,8 @@ public:
     // of the local buffer
     // returns num_msg actually read
     size_t pull(size_t start_idx, size_t read_idx, size_t num_msg);
+    // for test only
+    size_t pull_batch(size_t start_idx, size_t read_idx, size_t num_msg);
 
     inline T *data() {
         return data_buf->get_data();

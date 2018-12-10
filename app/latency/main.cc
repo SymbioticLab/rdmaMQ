@@ -77,6 +77,7 @@ void run_broker() {
     auto broker = new rmq::Broker<int>(2);
     broker->init_transport();
     while (1) {
+        sleep(10);
         //std::cout << broker->ctrl()[0] << std::endl;
     } // can't return
 }

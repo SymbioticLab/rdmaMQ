@@ -10,7 +10,7 @@
 #include <math.h>
 
 size_t NUM_REQ = 10000000;
-size_t BATCH_SIZE = 1000;
+size_t BATCH_SIZE = 500;
 size_t start_cycle;
 size_t end_cycle;
 
@@ -47,7 +47,8 @@ void run_consumer() {
     start_cycle = rmq::get_cycles();
     for (size_t i = 0; i < NUM_REQ; i+=BATCH_SIZE) {
         size_t read_idx = i % rmq::bkr_buff_cap;
-        consumer->pull(0, read_idx, BATCH_SIZE);
+        //consumer->pull(0, read_idx, BATCH_SIZE);
+        consumer->pull_batch(0, read_idx, BATCH_SIZE);
         //std::cout << "Data read: " << consumer->data()[i] << std::endl;
     }
     end_cycle = rmq::get_cycles();
@@ -61,6 +62,7 @@ void run_broker() {
     auto broker = new rmq::Broker<int>(2);
     broker->init_transport();
     while (1) {
+        sleep(10);
         //std::cout << broker->ctrl()[0] << std::endl;
     } // can't return
 }

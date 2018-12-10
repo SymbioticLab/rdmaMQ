@@ -111,11 +111,13 @@ public:
     // local_addr specifies sge.addr in local buffer,
     void post_WRITE(uint64_t local_addr, uint32_t length, uint64_t remote_addr, size_t qp_idx = 0);
     // for test only
-    void post_WRITE_with_flag(uint64_t local_addr, uint32_t length, uint64_t remote_addr, int flag, size_t qp_idx = 0);
+    void post_WRITE_with_flag(uint64_t local_addr, uint32_t length, uint64_t remote_addr, int send_flag, size_t qp_idx = 0);
 
     // post a send request using RMDA_READ
     // uses data_mr
     void post_READ(uint64_t local_addr, uint32_t length, uint64_t remote_addr, size_t qp_idx = 0);
+    // for test only
+    void post_READ_with_flag(uint64_t local_addr, uint32_t length, uint64_t remote_addr, int send_flag, size_t qp_idx = 0);
 
 };
 
