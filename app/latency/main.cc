@@ -42,10 +42,13 @@ void report_perf() {
 void run_producer() {
     std::cout << "Running as Producer" << std::endl;
     init_lat_array();
-    auto producer = new rmq::Producer<int>(NUM_REQ, "10.0.0.2");
+    //auto producer = new rmq::Producer<int>(NUM_REQ, "10.0.0.2");
+    //auto producer = new rmq::Producer<rmq::msg16_t>(NUM_REQ, "10.0.0.2");
+    //auto producer = new rmq::Producer<rmq::msg64_t>(NUM_REQ, "10.0.0.2");
+    auto producer = new rmq::Producer<rmq::msg256_t>(NUM_REQ, "10.0.0.2");
     producer->init_transport();
     for (size_t i = 0; i < NUM_REQ; i++) {
-        producer->data()[i] = i;
+        //producer->data()[i] = i;
         start_cycles[i] = rmq::get_cycles();
         producer->push(i, 1);
         end_cycles[i] = rmq::get_cycles();
@@ -58,7 +61,10 @@ void run_producer() {
 void run_consumer() {
     std::cout << "Running as Consumer" << std::endl;
     init_lat_array();
-    auto consumer = new rmq::Consumer<int>(NUM_REQ, "10.0.0.2");
+    //auto consumer = new rmq::Consumer<int>(NUM_REQ, "10.0.0.2");
+    //auto consumer = new rmq::Consumer<rmq::msg16_t>(NUM_REQ, "10.0.0.2");
+    //auto consumer = new rmq::Consumer<rmq::msg64_t>(NUM_REQ, "10.0.0.2");
+    auto consumer = new rmq::Consumer<rmq::msg256_t>(NUM_REQ, "10.0.0.2");
     consumer->init_transport();
     std::cout << "remote write idx = " << consumer->fetch_write_idx() << std::endl;
     for (size_t i = 0; i < NUM_REQ; i++) {
@@ -74,7 +80,10 @@ void run_consumer() {
 
 void run_broker() {
     std::cout << "Running as Broker" << std::endl;
-    auto broker = new rmq::Broker<int>(2);
+    //auto broker = new rmq::Broker<int>(2);
+    //auto broker = new rmq::Broker<rmq::msg16_t>(2);
+    //auto broker = new rmq::Broker<rmq::msg64_t>(2);
+    auto broker = new rmq::Broker<rmq::msg256_t>(2);
     broker->init_transport();
     while (1) {
         sleep(10);

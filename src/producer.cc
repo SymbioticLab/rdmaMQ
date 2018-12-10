@@ -103,5 +103,8 @@ template class Producer<char>;
 template class Producer<int>;
 template class Producer<uint64_t>;
 template class Producer<std::string>;
+template class Producer<msg16_t>;
+template class Producer<msg64_t>;
+template class Producer<msg256_t>;
 
 }

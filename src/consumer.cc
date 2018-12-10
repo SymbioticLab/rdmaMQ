@@ -90,5 +90,8 @@ template class Consumer<char>;
 template class Consumer<int>;
 template class Consumer<uint64_t>;
 template class Consumer<std::string>;
+template class Consumer<msg16_t>;
+template class Consumer<msg64_t>;
+template class Consumer<msg256_t>;
 
 }
