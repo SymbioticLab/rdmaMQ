@@ -71,6 +71,33 @@ size_t Producer<T>::push(size_t start_idx, size_t num_msg) {
     return num_msg;
 }
 
+template <typename T>
+size_t Producer<T>::push_batch(size_t start_idx, size_t num_msg) {
+    // basic checks
+    assert_exit(start_idx <= data_buf->get_capacity(), "Error: Invalid start_idx (greater than capacity).");
+    assert_exit(num_msg > 0 && num_msg <= bkr_buff_cap, "Error: Invalid batch_size value");
+
+    // atomically get next_write_idx and set new idx at the broker
+    num_msg = fetch_and_add_write_idx(start_idx, num_msg);
+
+    
+    uint64_t local_addr = start_idx * sizeof(T) + transport->get_local_info()[0].data_vaddr;
+    uint32_t length = sizeof(T);
+    uint64_t remote_addr = fetched_write_idx * sizeof(T) + transport->get_remote_info()[0].data_vaddr;
+    int flag = 0;
+    for (size_t i = 0; i < num_msg; i++) {
+        if (i == num_msg - 1) {
+            flag = 1;
+        }
+        transport->post_WRITE_with_flag(local_addr, length, remote_addr, flag);
+        local_addr += length;
+        remote_addr += length;
+    }
+
+    transport->poll_from_cq(1);
+    return num_msg;
+}
+
 // explicit instantiations
 template class Producer<char>;
 template class Producer<int>;

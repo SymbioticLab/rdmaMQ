@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <math.h>
 
-size_t NUM_REQ = 1000000;
+size_t NUM_REQ = 10000000;
 size_t BATCH_SIZE = 1000;
 size_t start_cycle;
 size_t end_cycle;
@@ -19,6 +19,7 @@ void report_perf(size_t duration) {
     double total_time = (double)duration / cpu_mhz;
     double tput = (double)NUM_REQ / total_time * 1000000;
     printf("@MEASUREMENT:\n");
+    printf("total time = %.2f\n", total_time);
     printf("THROUGHPUT = %.2f\n", tput);
 }
 
@@ -28,7 +29,8 @@ void run_producer() {
     producer->init_transport();
     start_cycle = rmq::get_cycles();
     for (size_t i = 0; i < NUM_REQ; i+=BATCH_SIZE) {
-        producer->push(i, BATCH_SIZE);
+        //producer->push(0, BATCH_SIZE);
+        producer->push_batch(0, BATCH_SIZE);
         //std::cout << "Data: " << producer->data()[i] << std::endl;
     }
     end_cycle = rmq::get_cycles();

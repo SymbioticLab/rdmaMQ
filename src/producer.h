@@ -66,6 +66,9 @@ public:
     // returns num_msg actually written
     size_t push(size_t start_idx, size_t num_msg);
 
+    // for test only
+    size_t push_batch(size_t start_idx, size_t num_msg);
+
     inline T *data() {
         return data_buf->get_data();
     }
